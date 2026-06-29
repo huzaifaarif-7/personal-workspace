@@ -8,7 +8,19 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     frontend_url: str = "http://localhost:5173"   # where to send users after OAuth
 
-    # Auth
+    # --- Session (Starlette SessionMiddleware) ---
+    # SESSION_SECRET_KEY must be set in .env — no default is provided so that
+    # startup fails loudly rather than silently using a weak/shared key.
+    # Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+    session_secret_key: str
+
+    # --- Token encryption (see server.crypto) ---
+    # TOKEN_ENCRYPTION_KEY is also read directly by crypto.py at import time
+    # (with a hard RuntimeError if missing).  Declaring it here too lets
+    # pydantic-settings validate it and expose it via get_settings().
+    token_encryption_key: str | None = None
+
+    # Auth (legacy JWT fields — kept for backward compatibility)
     jwt_secret: str = "change-me"
     jwt_algorithm: str = "HS256"
     access_token_minutes: int = 60 * 24
