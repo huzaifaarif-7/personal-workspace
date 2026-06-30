@@ -19,8 +19,12 @@ from .github_routes import (                              # new GitHub OAuth + d
     auth_router as gh_auth_router,
     github_router as gh_github_router,
 )
+from .google_routes import (                              # new Google OAuth + data routes
+    auth_router as go_auth_router,
+    google_router as go_google_router,
+)
 # Route modules — only import modules that define `router = APIRouter(...)`
-from . import oauth, dashboard, calendar, email
+from . import dashboard, calendar
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -53,13 +57,17 @@ app.add_middleware(
 )
 
 # ── Routers ───────────────────────────────────────────────────────────────────
-# Legacy routes (Google OAuth, dashboard aggregate, calendar, email)
-for r in (oauth, dashboard, calendar, email):
+# Legacy routes (dashboard aggregate, calendar)
+for r in (dashboard, calendar):
     app.include_router(r.router, prefix=settings.api_prefix)
 
 # GitHub OAuth + data routes
 app.include_router(gh_auth_router,   prefix=settings.api_prefix)
 app.include_router(gh_github_router, prefix=settings.api_prefix)
+
+# Google OAuth + data routes
+app.include_router(go_auth_router,   prefix=settings.api_prefix)
+app.include_router(go_google_router, prefix=settings.api_prefix)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
