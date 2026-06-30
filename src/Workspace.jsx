@@ -20,7 +20,9 @@ const CSS = `
   --text:#E9EBF2; --dim:#99A1B5; --faint:#5F6678;
   --primary:#7B6CFF; --primary-2:#9D8BFF; --teal:#2DD4BF; --blue:#4C8DFF;
   --amber:#F5B544; --rose:#FF6B8A; --green:#3FCF8E;
+  --danger:var(--rose);
   --slack:#9B6BFF; --gcal:#4C8DFF; --cly:#5B7CFA; --gh:#C9D1D9; --email:#F5B544;
+  --input-bg:var(--inset); --input-border:var(--border); --input-text:var(--text); --input-placeholder:var(--faint);
   --radius:16px; --radius-sm:11px;
   --shadow:0 1px 0 rgba(255,255,255,.03) inset, 0 18px 40px -24px rgba(0,0,0,.8);
 }
@@ -112,6 +114,21 @@ const CSS = `
 .tag-md{background:rgba(245,181,68,.14);color:#ffd27a;border:1px solid rgba(245,181,68,.25)}
 .tag-lo{background:rgba(63,207,142,.14);color:#86e7bb;border:1px solid rgba(63,207,142,.25)}
 .tag-imp{background:rgba(255,107,138,.12);color:#ffa9bb;border:1px solid rgba(255,107,138,.22)}
+
+/* ---------- forms / auth ---------- */
+.input-group{margin-bottom:16px}
+.input-label{color:var(--dim);font-size:12px;font-weight:500;margin-bottom:6px;display:block}
+.input-field{width:100%;background:var(--input-bg);color:var(--input-text);border:1px solid var(--input-border);
+  border-radius:var(--radius-sm);padding:12px 14px;font-size:13.5px;transition:border-color .15s, box-shadow .15s;outline:none}
+.input-field::placeholder{color:var(--input-placeholder)}
+.input-field:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(123,108,255,.15)}
+.auth-error{color:var(--danger);background:rgba(255,107,138,.1);border:1px solid rgba(255,107,138,.2);
+  padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px}
+.auth-tabs{display:flex;background:var(--inset);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:24px}
+.auth-tab{flex:1;text-align:center;padding:8px 0;font-size:13px;font-weight:600;color:var(--dim);
+  border-radius:8px;cursor:pointer;transition:.15s;border:none;background:none}
+.auth-tab.active{background:var(--card);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
 
 /* ---------- hero / countdown ---------- */
 .hero{grid-column:span 2;background:
@@ -467,54 +484,57 @@ function AuthView({ onAuthSuccess }) {
           <div className="brand-name" style={{ fontSize: 20 }}>Workspace</div>
         </div>
         
-        <div className="card">
-          <div className="card-b" style={{ padding: 24 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, textAlign: "center" }}>
-              {mode === "login" ? "Log in to your account" : "Create your account"}
-            </h2>
+        <div className="card" style={{ maxWidth: 380, width: "100%", margin: "0 auto" }}>
+          <div className="card-b" style={{ padding: "32px 28px" }}>
             
-            {error && (
-              <div style={{ padding: "10px 14px", background: "rgba(255,107,138,0.1)", color: "var(--rose)", border: "1px solid rgba(255,107,138,0.2)", borderRadius: 8, fontSize: 13, marginBottom: 20 }}>
-                {error}
-              </div>
-            )}
-            
-            <form onSubmit={submit} style={{ display: "flex", flexDir: "column", gap: 16 }}>
-              {mode === "signup" && (
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Full Name</label>
-                  <input name="full_name" required placeholder="Jane Doe" style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
-                </div>
-              )}
-              
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Email</label>
-                <input name="email" type="email" required placeholder="jane@example.com" style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
-              </div>
-              
-              <div>
-                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Password</label>
-                <input name="password" type="password" required style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
-              </div>
-              
-              {mode === "signup" && (
-                <div>
-                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Confirm Password</label>
-                  <input name="confirm_password" type="password" required style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
-                </div>
-              )}
-              
-              <button type="submit" disabled={loading} className="btn primary" style={{ width: "100%", padding: 12, marginTop: 8, justifyContent: "center", height: "auto" }}>
-                {loading ? "Please wait..." : mode === "login" ? "Log in" : "Sign up"}
+            <div className="auth-tabs">
+              <button 
+                type="button" 
+                className={`auth-tab ${mode === "login" ? "active" : ""}`} 
+                onClick={() => { setMode("login"); setError(null); }}
+              >
+                Log in
               </button>
-            </form>
-            
-            <div style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: "var(--dim)" }}>
-              {mode === "login" ? "Don't have an account? " : "Already have an account? "}
-              <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(null); }} style={{ background: "none", border: "none", color: "var(--primary-2)", cursor: "pointer", padding: 0, fontWeight: 500 }}>
-                {mode === "login" ? "Sign up" : "Log in"}
+              <button 
+                type="button" 
+                className={`auth-tab ${mode === "signup" ? "active" : ""}`} 
+                onClick={() => { setMode("signup"); setError(null); }}
+              >
+                Sign up
               </button>
             </div>
+            
+            {error && <div className="auth-error">{error}</div>}
+            
+            <form onSubmit={submit}>
+              {mode === "signup" && (
+                <div className="input-group">
+                  <label className="input-label">Full Name</label>
+                  <input name="full_name" required placeholder="Jane Doe" className="input-field" />
+                </div>
+              )}
+              
+              <div className="input-group">
+                <label className="input-label">Email</label>
+                <input name="email" type="email" required placeholder="jane@example.com" className="input-field" />
+              </div>
+              
+              <div className="input-group">
+                <label className="input-label">Password</label>
+                <input name="password" type="password" required className="input-field" />
+              </div>
+              
+              {mode === "signup" && (
+                <div className="input-group">
+                  <label className="input-label">Confirm Password</label>
+                  <input name="confirm_password" type="password" required className="input-field" />
+                </div>
+              )}
+              
+              <button type="submit" disabled={loading} className="btn primary" style={{ width: "100%", padding: 12, marginTop: 12, justifyContent: "center", height: "auto" }}>
+                {loading ? "Please wait..." : mode === "login" ? "Log in to workspace" : "Create account"}
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -532,13 +552,14 @@ export default function App() {
   const [data, setData] = useState(() => buildData());
   const [mode, setMode] = useState("demo");      // "demo" | "live" | "loading"
   const [view, setView] = useState("dashboard");
-  const [onboard, setOnboard] = useState(true);
+  const [onboard, setOnboard] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [assistOpen, setAssistOpen] = useState(false);
   const [newEvent, setNewEvent] = useState(false);
   const [events, setEvents] = useState(data.calendar);
 
   const checkAuth = async () => {
+    setAuthLoading(true);
     if (!API_BASE) {
       setAuthLoading(false);
       return;
@@ -548,10 +569,10 @@ export default function App() {
       const payload = await r.json();
       if (payload.authenticated) {
         setUser(payload);
-        // Once authenticated, fetch dashboard
         fetchDashboardData();
       } else {
         setUser(null);
+        setOnboard(false);
         setAuthLoading(false);
       }
     } catch (e) {
@@ -575,19 +596,37 @@ export default function App() {
   useEffect(() => {
     if (user) {
       document.title = `${user.full_name}'s Workspace`;
-      // Re-build demo data with real name if fallback happens
       setData(buildData(user.full_name));
+      const done = localStorage.getItem(`onboarding_done_${user.id}`);
+      setOnboard(!done);
     } else {
       document.title = "Workspace";
+      setOnboard(false);
     }
   }, [user]);
 
+  const finishOnboarding = () => {
+    if (user?.id) localStorage.setItem(`onboarding_done_${user.id}`, "1");
+    setOnboard(false);
+  };
+
+  // Auth → Dashboard (with onboarding overlay for first-time users)
   if (authLoading) {
-    return <div style={{ display: "grid", placeItems: "center", height: "100vh", color: "var(--dim)" }}>Loading...</div>;
+    return (
+      <>
+        <style>{CSS}</style>
+        <div style={{ display: "grid", placeItems: "center", height: "100vh", color: "var(--dim)", background: "var(--bg)" }}>Loading…</div>
+      </>
+    );
   }
 
   if (!user) {
-    return <AuthView onAuthSuccess={checkAuth} />;
+    return (
+      <>
+        <style>{CSS}</style>
+        <AuthView onAuthSuccess={checkAuth} />
+      </>
+    );
   }
 
   const getInitials = (name) => {
@@ -730,7 +769,15 @@ export default function App() {
       <button className="fab" onClick={() => setAssistOpen(true)}><Mascot size={34} /></button>
 
       {/* ============ ONBOARDING ============ */}
-      {onboard && <Onboarding user={user} integrations={data.integrations} mode={mode} onConnect={liveConnect} onDone={() => setOnboard(false)} />}
+      {onboard && (
+        <Onboarding
+          user={user}
+          integrations={data.integrations}
+          mode={mode}
+          onConnect={liveConnect}
+          onDone={finishOnboarding}
+        />
+      )}
       {newEvent && <NewEventModal onClose={() => setNewEvent(false)} onAdd={addEvent} />}
     </div>
   );
@@ -1483,7 +1530,7 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
 }
 
 /* ---------------------------- Onboarding ---------------------------- */
-function Onboarding({ integrations, mode, onConnect, onDone }) {
+function Onboarding({ user, integrations, mode, onConnect, onDone }) {
   const [step, setStep] = useState(0);
   const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, false])));
   const connectedCount = Object.values(conn).filter(Boolean).length;
