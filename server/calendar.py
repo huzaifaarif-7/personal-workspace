@@ -1,7 +1,7 @@
 """Google Calendar endpoints (live with fallback)."""
 from fastapi import APIRouter
-from .. import schemas
-from ..services import data
+from . import schemas
+from . import data
 
 router = APIRouter(prefix="/calendar", tags=["calendar"])
 

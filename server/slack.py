@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 
 import httpx
 
-from ... import schemas
+from . import schemas
 
 BASE = "https://slack.com/api"
 

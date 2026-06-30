@@ -1,7 +1,7 @@
 """Calendly integration — booking link and upcoming scheduled calls (PAT)."""
 import httpx
 
-from ... import schemas
+from . import schemas
 from ._util import parse_iso
 
 BASE = "https://api.calendly.com"

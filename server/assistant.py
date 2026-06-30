@@ -9,7 +9,7 @@ from datetime import datetime
 
 import httpx
 
-from ..config import get_settings
+from .config import get_settings
 from . import data
 
 settings = get_settings()
@@ -82,7 +82,7 @@ def answer(user_name: str, message: str, history: list[dict]) -> tuple[str, str]
             headers={"Authorization": f"Bearer {settings.openrouter_api_key}",
                      "Content-Type": "application/json",
                      "HTTP-Referer": settings.frontend_url,
-                     "X-Title": "Huzaifa's Workspace"},
+                     "X-Title": "Workspace"},
             json={"model": settings.llm_model,
                   "messages": [{"role": "system", "content": system}, *history,
                                {"role": "user", "content": message}],

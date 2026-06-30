@@ -11,7 +11,7 @@ from threading import Lock
 
 import httpx
 
-from ..config import get_settings
+from .config import get_settings
 
 settings = get_settings()
 log = logging.getLogger("workspace")

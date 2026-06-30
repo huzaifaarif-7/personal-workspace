@@ -6,9 +6,9 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from ... import schemas
-from ...config import get_settings
-from ...services import store
+from . import schemas
+from .config import get_settings
+from . import store
 from ._util import parse_iso
 
 settings = get_settings()

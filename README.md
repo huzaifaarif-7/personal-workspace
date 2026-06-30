@@ -8,7 +8,7 @@ origin, no CORS.
 .
 ├── api/index.py        Vercel Python entrypoint → exposes the FastAPI app
 ├── server/             FastAPI app (routers, OAuth, integration clients, assistant)
-├── src/                React frontend (HuzaifasWorkspace.jsx + main.jsx)
+├── src/                React frontend (Workspace.jsx + main.jsx)
 ├── index.html, vite.config.js, package.json   Vite app
 ├── requirements.txt    Python deps (installed for the function)
 ├── vercel.json         function timeout + SPA rewrite
