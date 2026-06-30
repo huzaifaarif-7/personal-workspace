@@ -293,7 +293,7 @@ def github_status(
     state and username are exposed.
 
     Returns:
-        {"connected": true, "username": "huzaifaarif"}
+        {"connected": true, "username": "octocat"}
         {"connected": false, "username": null}
     """
     conn = (

@@ -114,7 +114,7 @@ INTEGRATION_META = {
 }
 
 
-def dashboard_payload(user_name: str = "Huzaifa") -> dict:
+def dashboard_payload(user_name: str) -> dict:
     st = status()
     slack = slack_messages()
     cal = calendar_events()

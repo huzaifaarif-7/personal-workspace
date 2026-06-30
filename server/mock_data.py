@@ -70,13 +70,13 @@ def set_connected(integration_id: str, connected: bool) -> schemas.Integration:
 def slack_messages() -> list[schemas.SlackMessage]:
     return [
         schemas.SlackMessage(id="s1", sender="Ahmed Raza", channel="#product", kind="mention",
-                             text="@Huzaifa can you review the new onboarding flow before the 3pm sync?",
+                             text="@User can you review the new onboarding flow before the 3pm sync?",
                              timestamp=_now() - timedelta(minutes=8), unread=True),
         schemas.SlackMessage(id="s2", sender="Sara Khan", channel="#engineering", kind="mention",
-                             text="@Huzaifa the API rate-limit fix is deployed to staging 🎉",
+                             text="@User the API rate-limit fix is deployed to staging 🎉",
                              timestamp=_now() - timedelta(minutes=41), unread=True),
         schemas.SlackMessage(id="s3", sender="Bilal", channel="#design", kind="mention",
-                             text="@Huzaifa loved the new dashboard mocks — shipping today?",
+                             text="@User loved the new dashboard mocks — shipping today?",
                              timestamp=_now() - timedelta(hours=2), unread=False),
         schemas.SlackMessage(id="s4", sender="Ayesha Malik", kind="dm",
                              text="Are we still on for the 1:1 later today?",
@@ -109,7 +109,7 @@ def create_event(req: schemas.CreateEventRequest) -> schemas.CalendarEvent:
 
 def calendly_overview() -> schemas.CalendlyOverview:
     return schemas.CalendlyOverview(
-        booking_link="calendly.com/huzaifa/30min",
+        booking_link="calendly.com/user/30min",
         availability="Available",
         bookings=[
             schemas.CalendlyBooking(id="b1", name="Intro Call", invitee="Daniel Wright",
@@ -132,7 +132,7 @@ def github_activity() -> list[schemas.GithubActivity]:
                                repo="web-dashboard", commits=0,
                                message="Dark theme polish & responsive sidebar",
                                timestamp=_now() - timedelta(minutes=38)),
-        schemas.GithubActivity(id="g3", actor="Huzaifa", action="pushed 2 commits",
+        schemas.GithubActivity(id="g3", actor="User", action="pushed 2 commits",
                                repo="ai-assistant", commits=2,
                                message="chore: refine assistant system prompt",
                                timestamp=_now() - timedelta(hours=1)),

@@ -290,9 +290,7 @@ function Mascot({ size = 46 }) {
 }
 
 /* ---------------------------- Data ---------------------------- */
-const USER = { name: "Huzaifa", email: "huzaifa@workspace.io", initials: "HZ" };
-
-function buildData() {
+function buildData(userName = "User") {
   const now = new Date();
   const at = (h, m, dayOffset = 0) => {
     const d = new Date(now); d.setDate(d.getDate() + dayOffset); d.setHours(h, m, 0, 0); return d;
@@ -302,9 +300,9 @@ function buildData() {
   return {
     slack: {
       mentions: [
-        { id: 1, channel: "#product", from: "Ahmed Raza", text: "@Huzaifa can you review the new onboarding flow before the 3pm sync?", time: "8m", unread: true },
-        { id: 2, channel: "#engineering", from: "Sara Khan", text: "@Huzaifa the API rate-limit fix is deployed to staging 🎉", time: "41m", unread: true },
-        { id: 3, channel: "#design", from: "Bilal", text: "@Huzaifa loved the new dashboard mocks — shipping today?", time: "2h", unread: false },
+        { id: 1, channel: "#product", from: "Ahmed Raza", text: `@${userName.split(' ')[0]} can you review the new onboarding flow before the 3pm sync?`, time: "8m", unread: true },
+        { id: 2, channel: "#engineering", from: "Sara Khan", text: `@${userName.split(' ')[0]} the API rate-limit fix is deployed to staging 🎉`, time: "41m", unread: true },
+        { id: 3, channel: "#design", from: "Bilal", text: `@${userName.split(' ')[0]} loved the new dashboard mocks — shipping today?`, time: "2h", unread: false },
       ],
       dms: [
         { id: 4, from: "Ayesha Malik", text: "Are we still on for the 1:1 later today?", time: "15m", unread: true },
@@ -320,8 +318,8 @@ function buildData() {
       { id: "c6", title: "Client Demo — Acme", start: at(14, 0, 1), end: at(14, 45, 1), priority: "high", location: "Zoom", attendees: 4 },
     ],
     calendly: {
-      link: "calendly.com/huzaifa/30min",
       availability: "Available",
+      link: "calendly.com/user/30min",
       booked: [
         { id: "b1", name: "Intro Call", with: "Daniel Wright", time: "Tomorrow · 1:00 PM", type: "30 min" },
         { id: "b2", name: "Product Walkthrough", with: "Priya Nair", time: "Thu · 4:30 PM", type: "45 min" },
@@ -331,7 +329,7 @@ function buildData() {
     github: [
       { id: "g1", actor: "Ali Hassan", action: "pushed 5 commits", repo: "backend-api", message: "feat: add rate limiting + retry logic to integration layer", time: "10m", commits: 5 },
       { id: "g2", actor: "Sara Khan", action: "opened a pull request", repo: "web-dashboard", message: "Dark theme polish & responsive sidebar", time: "38m", commits: 0, pr: true },
-      { id: "g3", actor: "Huzaifa", action: "pushed 2 commits", repo: "ai-assistant", message: "chore: refine assistant system prompt", time: "1h", commits: 2 },
+      { id: "g3", actor: userName.split(' ')[0], action: "pushed 2 commits", repo: "ai-assistant", message: "chore: refine assistant system prompt", time: "1h", commits: 2 },
       { id: "g4", actor: "Bilal", action: "merged a pull request", repo: "web-dashboard", message: "Add Calendly integration cards", time: "3h", commits: 0, pr: true },
     ],
     email: [
@@ -417,10 +415,121 @@ async function fetchDashboard() {
 }
 
 /* =========================================================================
+   AUTH VIEW
+   ========================================================================= */
+function AuthView({ onAuthSuccess }) {
+  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    
+    const fd = new FormData(e.target);
+    const data = Object.fromEntries(fd.entries());
+    
+    if (mode === "signup" && data.password !== data.confirm_password) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const res = await fetch(`${API_BASE}/auth/${mode}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
+      const payload = await res.json();
+      if (!res.ok) {
+        if (payload.detail?.error === "email_taken") throw new Error("Email is already registered.");
+        if (payload.detail?.error === "invalid_credentials") throw new Error("Incorrect email or password.");
+        if (payload.detail?.reason === "password_too_short") throw new Error("Password must be at least 8 characters.");
+        throw new Error("An error occurred. Please try again.");
+      }
+      
+      onAuthSuccess();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ display: "grid", placeItems: "center", minHeight: "100vh", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 360 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 32, justifyContent: "center" }}>
+          <div className="brand-mark"><Sparkles size={18} color="#fff" /></div>
+          <div className="brand-name" style={{ fontSize: 20 }}>Workspace</div>
+        </div>
+        
+        <div className="card">
+          <div className="card-b" style={{ padding: 24 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20, textAlign: "center" }}>
+              {mode === "login" ? "Log in to your account" : "Create your account"}
+            </h2>
+            
+            {error && (
+              <div style={{ padding: "10px 14px", background: "rgba(255,107,138,0.1)", color: "var(--rose)", border: "1px solid rgba(255,107,138,0.2)", borderRadius: 8, fontSize: 13, marginBottom: 20 }}>
+                {error}
+              </div>
+            )}
+            
+            <form onSubmit={submit} style={{ display: "flex", flexDir: "column", gap: 16 }}>
+              {mode === "signup" && (
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Full Name</label>
+                  <input name="full_name" required placeholder="Jane Doe" style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
+                </div>
+              )}
+              
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Email</label>
+                <input name="email" type="email" required placeholder="jane@example.com" style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
+              </div>
+              
+              <div>
+                <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Password</label>
+                <input name="password" type="password" required style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
+              </div>
+              
+              {mode === "signup" && (
+                <div>
+                  <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--dim)", marginBottom: 6 }}>Confirm Password</label>
+                  <input name="confirm_password" type="password" required style={{ width: "100%", padding: "10px 12px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--text)" }} />
+                </div>
+              )}
+              
+              <button type="submit" disabled={loading} className="btn primary" style={{ width: "100%", padding: 12, marginTop: 8, justifyContent: "center", height: "auto" }}>
+                {loading ? "Please wait..." : mode === "login" ? "Log in" : "Sign up"}
+              </button>
+            </form>
+            
+            <div style={{ textAlign: "center", marginTop: 24, fontSize: 13, color: "var(--dim)" }}>
+              {mode === "login" ? "Don't have an account? " : "Already have an account? "}
+              <button onClick={() => { setMode(mode === "login" ? "signup" : "login"); setError(null); }} style={{ background: "none", border: "none", color: "var(--primary-2)", cursor: "pointer", padding: 0, fontWeight: 500 }}>
+                {mode === "login" ? "Sign up" : "Log in"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
    APP
    ========================================================================= */
 export default function App() {
-  const [data, setData] = useState(buildData);
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  const [data, setData] = useState(() => buildData());
   const [mode, setMode] = useState("demo");      // "demo" | "live" | "loading"
   const [view, setView] = useState("dashboard");
   const [onboard, setOnboard] = useState(true);
@@ -429,16 +538,63 @@ export default function App() {
   const [newEvent, setNewEvent] = useState(false);
   const [events, setEvents] = useState(data.calendar);
 
-  // Pull live data from the backend on load; stay on demo data if unreachable.
-  useEffect(() => {
-    if (!API_BASE) return;
+  const checkAuth = async () => {
+    if (!API_BASE) {
+      setAuthLoading(false);
+      return;
+    }
+    try {
+      const r = await fetch(`${API_BASE}/me`, { credentials: "include" });
+      const payload = await r.json();
+      if (payload.authenticated) {
+        setUser(payload);
+        // Once authenticated, fetch dashboard
+        fetchDashboardData();
+      } else {
+        setUser(null);
+        setAuthLoading(false);
+      }
+    } catch (e) {
+      setAuthLoading(false);
+    }
+  };
+
+  const fetchDashboardData = () => {
     let alive = true;
     setMode("loading");
     fetchDashboard()
-      .then((live) => { if (!alive) return; setData(live); setEvents(live.calendar); setMode("live"); })
-      .catch(() => { if (alive) setMode("demo"); });
+      .then((live) => { if (!alive) return; setData(live); setEvents(live.calendar); setMode("live"); setAuthLoading(false); })
+      .catch(() => { if (alive) { setMode("demo"); setAuthLoading(false); } });
     return () => { alive = false; };
+  };
+
+  useEffect(() => {
+    checkAuth();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      document.title = `${user.full_name}'s Workspace`;
+      // Re-build demo data with real name if fallback happens
+      setData(buildData(user.full_name));
+    } else {
+      document.title = "Workspace";
+    }
+  }, [user]);
+
+  if (authLoading) {
+    return <div style={{ display: "grid", placeItems: "center", height: "100vh", color: "var(--dim)" }}>Loading...</div>;
+  }
+
+  if (!user) {
+    return <AuthView onAuthSuccess={checkAuth} />;
+  }
+
+  const getInitials = (name) => {
+    if (!name) return "";
+    return name.split(" ").map(p => p[0]).join("").substring(0, 2).toUpperCase();
+  };
+
 
   const liveConnect = (internalId) => {
     const path = { gh: "github", gcal: "google", email: "google" }[internalId];
@@ -489,7 +645,7 @@ export default function App() {
           <div className="brand-mark"><Zap size={18} color="#fff" /></div>
           <div>
             <div className="brand-name hw-display">Workspace</div>
-            <div className="brand-sub">{USER.name}'s command center</div>
+            <div className="brand-sub">{user.full_name.split(' ')[0]}'s command center</div>
           </div>
         </div>
         <div className="nav-label">Menu</div>
@@ -500,12 +656,26 @@ export default function App() {
             {n.badge ? <span className="badge">{n.badge}</span> : null}
           </div>
         ))}
-        <div className="side-foot">
-          <Initials name={USER.name} className="avatar lg" />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 650, fontSize: 13 }}>{USER.name}</div>
-            <div style={{ fontSize: 11, color: "var(--faint)", overflow: "hidden", textOverflow: "ellipsis" }}>{USER.email}</div>
+        <div className="side-foot" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", minWidth: 0 }}>
+            <Initials name={user.full_name} className="avatar lg" />
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 650, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.full_name}</div>
+              <div style={{ fontSize: 11, color: "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
+            </div>
           </div>
+          <button 
+            className="icon-btn" 
+            title="Log out"
+            onClick={async () => {
+              if (API_BASE) {
+                await fetch(`${API_BASE}/auth/logout`, { method: "POST", credentials: "include" });
+                window.location.reload();
+              }
+            }}
+          >
+            <X size={15} />
+          </button>
         </div>
       </aside>
 
@@ -514,7 +684,7 @@ export default function App() {
         <header className="topbar">
           <button className="icon-btn mobile-only" onClick={() => setNavOpen(true)}><Menu size={18} /></button>
           <div className="greet">
-            <h1 className="hw-display">{greeting}, {USER.name} 👋</h1>
+            <h1 className="hw-display">{greeting}, {user.full_name.split(' ')[0]} 👋</h1>
             <p>{dateStr} · Here's everything across your workspace</p>
           </div>
           <div className="search">
@@ -553,13 +723,14 @@ export default function App() {
         onClose={() => setAssistOpen(false)}
         data={data} events={events} addEvent={addEvent} mode={mode}
         unreadSlack={unreadSlack} unreadEmail={unreadEmail} todayEvents={todayEvents}
+        user={user}
       />
 
       {/* mobile assistant launcher */}
       <button className="fab" onClick={() => setAssistOpen(true)}><Mascot size={34} /></button>
 
       {/* ============ ONBOARDING ============ */}
-      {onboard && <Onboarding integrations={data.integrations} mode={mode} onConnect={liveConnect} onDone={() => setOnboard(false)} />}
+      {onboard && <Onboarding user={user} integrations={data.integrations} mode={mode} onConnect={liveConnect} onDone={() => setOnboard(false)} />}
       {newEvent && <NewEventModal onClose={() => setNewEvent(false)} onAdd={addEvent} />}
     </div>
   );
@@ -1009,34 +1180,132 @@ function GithubView() {
 }
 
 /* ---------------------------- Email view ---------------------------- */
-function EmailView({ email }) {
-  const [marked, setMarked] = useState({});
+function EmailView() {
+  const [status, setStatus] = useState("loading"); // loading, connected, disconnected, error
+  const [data, setData] = useState(null);
+  const [emailAddress, setEmailAddress] = useState(null);
+
+  const checkStatus = () => {
+    setStatus("loading");
+    fetch(`${API_BASE}/email/status`, { credentials: "include" })
+      .then(r => r.json())
+      .then(res => {
+        if (res.connected) {
+          setEmailAddress(res.email_address);
+          fetch(`${API_BASE}/email/messages`, { credentials: "include" })
+            .then(r => {
+              if (r.status === 401) { setStatus("disconnected"); return null; }
+              if (!r.ok) throw new Error("bad status");
+              return r.json();
+            })
+            .then(payload => {
+              if (payload) { setData(payload); setStatus("connected"); }
+            })
+            .catch(() => setStatus("error"));
+        } else {
+          setStatus("disconnected");
+        }
+      })
+      .catch(() => setStatus("error"));
+  };
+
+  useEffect(() => {
+    if (!API_BASE) return;
+    let alive = true;
+    setStatus("loading");
+    fetch(`${API_BASE}/email/status`, { credentials: "include" })
+      .then(r => r.json())
+      .then(res => {
+        if (!alive) return;
+        if (res.connected) {
+          setEmailAddress(res.email_address);
+          fetch(`${API_BASE}/email/messages`, { credentials: "include" })
+            .then(r => {
+              if (!alive) return null;
+              if (r.status === 401) { setStatus("disconnected"); return null; }
+              if (!r.ok) throw new Error("bad status");
+              return r.json();
+            })
+            .then(payload => {
+              if (alive && payload) { setData(payload); setStatus("connected"); }
+            })
+            .catch(() => { if (alive) setStatus("error"); });
+        } else {
+          setStatus("disconnected");
+        }
+      })
+      .catch(() => { if (alive) setStatus("error"); });
+    return () => { alive = false; };
+  }, []);
+
+  const disconnect = () => {
+    setStatus("loading");
+    fetch(`${API_BASE}/auth/google/disconnect`, { method: "POST", credentials: "include" })
+      .then(() => checkStatus())
+      .catch(() => checkStatus());
+  };
+
+  const connect = () => {
+    window.location.href = `${API_BASE}/auth/google/login`;
+  };
+
+  const timeAgo = (ds) => {
+    if (!ds) return "";
+    const m = Math.floor((Date.now() - new Date(ds).getTime()) / 60000);
+    if (m < 60) return `${Math.max(0, m)}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
+
   return (
     <div>
-      <ViewHead title="Inbox" sub={`${email.filter((e) => e.unread).length} unread · ${email.filter((e) => e.important).length} important`}
-        action={<a className="btn primary" href="https://mail.google.com" target="_blank" rel="noreferrer"><Mail size={14} /> Open in Gmail</a>} />
-      <div className="card"><div className="card-b">
-        {email.map((e) => {
-          const imp = marked[e.id] ?? e.important;
-          return (
+      <ViewHead title="Inbox" sub={emailAddress ? `Connected as ${emailAddress}` : "Recent emails"}
+        action={
+          status === "connected" ? (
+            <button className="link-btn" onClick={disconnect} style={{ color: "var(--faint)", background: "transparent", border: "none" }}>Disconnect</button>
+          ) : status === "disconnected" ? (
+            <button className="btn primary" onClick={connect}><Mail size={14} /> Connect Gmail</button>
+          ) : null
+        } />
+      
+      {status === "loading" && <div style={{ color: "var(--dim)", fontSize: 14, padding: "20px 0" }}>Loading...</div>}
+      
+      {status === "error" && <div style={{ color: "var(--rose)", fontSize: 14, padding: "16px 20px", background: "rgba(255,107,138,0.1)", border: "1px solid rgba(255,107,138,0.2)", borderRadius: 12, marginBottom: 20 }}>An error occurred while fetching emails.</div>}
+      
+      {status === "disconnected" && (
+        <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--card)", borderRadius: "var(--radius)", border: "1px solid var(--border-soft)", marginTop: 20 }}>
+          <Mail size={48} color="var(--faint)" style={{ margin: "0 auto 16px" }} />
+          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Connect your Gmail</h2>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your recent inbox messages directly on your dashboard.</p>
+          <button className="btn primary" onClick={connect}><Mail size={14} /> Connect Gmail</button>
+        </div>
+      )}
+
+      {status === "connected" && data && (
+        <div className="card" style={{ marginTop: 20 }}><div className="card-b" style={{ padding: data.messages?.length ? "8px" : "16px 20px" }}>
+          {data.messages && data.messages.length > 0 ? data.messages.map((e) => (
             <div className="row" key={e.id}>
-              <Initials name={e.from} />
+              <Initials name={e.sender} />
               <div className="body">
-                <div className="top">{e.unread && <span className="unread-dot" />}<span className="name">{e.from}</span>
-                  {imp && <span className="pill tag-imp">Important</span>}<span className="time">{e.time}</span></div>
-                <div className="text"><b>{e.subject}</b> — {e.preview}</div>
+                <div className="top">
+                  {e.unread && <span className="unread-dot" />}
+                  <span className="name" style={{ color: e.unread ? "#fff" : "inherit" }}>{e.sender}</span>
+                  <span className="time">{timeAgo(e.received_at)}</span>
+                </div>
+                <div className="text" style={{ color: e.unread ? "var(--text)" : "var(--dim)" }}>
+                  <b style={{ color: e.unread ? "#fff" : "inherit" }}>{e.subject}</b> — {e.snippet}
+                </div>
               </div>
               <div style={{ display: "flex", gap: 6, alignSelf: "center" }}>
-                <button className="icon-btn" title="Mark important" style={{ width: 34, height: 34 }}
-                  onClick={() => setMarked((p) => ({ ...p, [e.id]: !imp }))}>
-                  <Star size={15} color={imp ? "var(--amber)" : "var(--faint)"} fill={imp ? "var(--amber)" : "none"} />
-                </button>
-                <a className="icon-btn" style={{ width: 34, height: 34 }} href="https://mail.google.com" target="_blank" rel="noreferrer"><ExternalLink size={15} /></a>
+                <a className="icon-btn" style={{ width: 34, height: 34 }} href={`https://mail.google.com/mail/u/0/#inbox/${e.id}`} target="_blank" rel="noreferrer"><ExternalLink size={15} /></a>
               </div>
             </div>
-          );
-        })}
-      </div></div>
+          )) : (
+            <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No new emails 🎉</div>
+          )}
+        </div></div>
+      )}
     </div>
   );
 }
@@ -1091,10 +1360,10 @@ function ViewHead({ title, sub, action }) {
 }
 
 /* ---------------------------- Assistant ---------------------------- */
-function Assistant({ className, onClose, data, events, addEvent, mode, unreadSlack, unreadEmail, todayEvents }) {
-  const name = `${USER.name}'s Assistant`;
+function Assistant({ className, onClose, data, events, addEvent, mode, unreadSlack, unreadEmail, todayEvents, user }) {
+  const name = `${user.full_name.split(' ')[0]}'s Assistant`;
   const [msgs, setMsgs] = useState([
-    { role: "assistant", content: `Hi ${USER.name}! 👋 I'm your assistant. I keep an eye on your Slack, Calendar, GitHub and inbox so you don't have to tab-hop. Ask me what's happening today, or to create a meeting.` },
+    { role: "assistant", content: `Hi ${user.full_name.split(' ')[0]}! 👋 I'm your assistant. I keep an eye on your Slack, Calendar, GitHub and inbox so you don't have to tab-hop. Ask me what's happening today, or to create a meeting.` },
   ]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1105,7 +1374,7 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
   const context = () => {
     const next = events.filter((e) => e.start > new Date()).sort((a, b) => a.start - b.start)[0];
     return {
-      user: USER.name, now: new Date().toString(),
+      user: user.full_name, now: new Date().toString(),
       slack: { unread: unreadSlack, mentions: data.slack.mentions.map((m) => ({ from: m.from, channel: m.channel, text: m.text, when: m.time })) },
       calendar_today: todayEvents.map((e) => ({ title: e.title, time: fmtTime(e.start), priority: e.priority, location: e.location })),
       calendar_tomorrow: events.filter((e) => { const t = new Date(); t.setDate(t.getDate() + 1); return e.start.toDateString() === t.toDateString(); }).map((e) => ({ title: e.title, time: fmtTime(e.start) })),
@@ -1137,7 +1406,7 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
       return `Done ✅ I've added "New Meeting" to your calendar for ${tomorrow ? "tomorrow" : "today"} at ${fmtTime(d)} with a Google Meet link. You can rename it from the Calendar tab.`;
     }
     if (/today|happening|summary|catch.*up|brief/.test(t) || t.length < 4)
-      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${USER.name} 👋\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n• ${c.github[0].who} pushed updates to ${c.github[0].repo}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
+      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]} 👋\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n• ${c.github[0].who} pushed updates to ${c.github[0].repo}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
     return `I can summarize your day, check Slack mentions, urgent emails, GitHub activity, or tomorrow's meetings — and I can create events for you. Try "What's happening today?"`;
   };
 
@@ -1231,7 +1500,7 @@ function Onboarding({ integrations, mode, onConnect, onDone }) {
             <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
               <Mascot size={52} />
               <div>
-                <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {USER.name} 👋</h2>
+                <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {user.full_name.split(' ')[0]} 👋</h2>
                 <p style={{ color: "var(--dim)", fontSize: 13.5, marginTop: 4 }}>Let's set up your command center.</p>
               </div>
             </div>

@@ -17,6 +17,8 @@ from .google_client import fetch_email_address, fetch_messages, get_valid_google
 log = logging.getLogger(__name__)
 settings = get_settings()
 
+log.info("Application Startup - Loaded Google Redirect URI: %s", settings.google_redirect_uri)
+
 auth_router = APIRouter(prefix="/auth/google", tags=["oauth-google"])
 google_router = APIRouter(prefix="/email", tags=["google"])
 
@@ -38,15 +40,16 @@ def google_login(request: Request, user: User = Depends(get_current_user)):
     auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
     params = {
         "client_id": settings.google_client_id,
-        "redirect_uri": settings.google_callback_url,
+        "redirect_uri": settings.google_redirect_uri,
         "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/gmail.readonly",
+        "scope": "https://www.googleapis.com/auth/gmail.readonly openid email",
         "access_type": "offline",
         "prompt": "consent",
         "state": state,
     }
     
     url = str(httpx.URL(auth_url).copy_with(params=params))
+    log.info("google_login: Redirecting to Google Auth with redirect_uri=%s", params["redirect_uri"])
     return RedirectResponse(url)
 
 
@@ -75,7 +78,7 @@ async def google_callback(
                 "client_id": settings.google_client_id,
                 "client_secret": settings.google_client_secret,
                 "code": code,
-                "redirect_uri": settings.google_callback_url,
+                "redirect_uri": settings.google_redirect_uri,
                 "grant_type": "authorization_code",
             },
         )
@@ -87,6 +90,15 @@ async def google_callback(
             )
             
         data = resp.json()
+        log.info(
+            "Google token exchange successful. token_type=%s, scope=%r, has_access_token=%s, has_refresh_token=%s, has_id_token=%s",
+            data.get("token_type"),
+            data.get("scope"),
+            "access_token" in data,
+            "refresh_token" in data,
+            "id_token" in data,
+        )
+        
         access_token = data["access_token"]
         refresh_token = data.get("refresh_token")
         expires_in = data.get("expires_in", 3599)

@@ -27,8 +27,14 @@ async def fetch_email_address(client: httpx.AsyncClient, token: str) -> str:
 
 async def get_valid_google_token(db: Session, conn: EmailConnection) -> str:
     """Returns a valid access token, refreshing if necessary."""
+    # SQLite often returns datetime as naive even if stored as aware.
+    # We must ensure it has tzinfo=timezone.utc before comparing.
+    expiry = conn.token_expiry
+    if expiry.tzinfo is None:
+        expiry = expiry.replace(tzinfo=timezone.utc)
+
     now = datetime.now(timezone.utc)
-    if conn.token_expiry > now:
+    if expiry > now:
         return decrypt_token(conn.access_token_encrypted)
 
     if not conn.refresh_token_encrypted:

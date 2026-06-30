@@ -176,7 +176,7 @@ async def get_username(client: httpx.AsyncClient, token: str) -> str:
         token:  Plaintext GitHub access token.
 
     Returns:
-        The GitHub username string (e.g. "huzaifaarif").
+        The GitHub username string (e.g. "octocat").
     """
     resp = await client.get(f"{GH_API}/user", headers=_headers(token))
     _check_response(resp, token)

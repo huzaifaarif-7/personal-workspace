@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "Huzaifa's Workspace API"
+    app_name: str = "Workspace API"
     api_prefix: str = "/api"
     frontend_url: str = "http://localhost:5173"   # where to send users after OAuth
 
@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     google_client_id: str | None = None
     google_client_secret: str | None = None
     google_callback_url: str = "http://localhost:8000/api/auth/google/callback"
+    google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
 
     # Calendly + Slack (static personal tokens)
     calendly_token: str | None = None

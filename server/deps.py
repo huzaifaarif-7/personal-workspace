@@ -22,7 +22,7 @@ Usage in a route::
 
     @router.get("/me")
     def me(user: User = Depends(get_current_user)):
-        return {"id": user.id, "name": user.display_name}
+        return {"id": user.id, "name": user.full_name}
 
     # If you also need the DB session in the same route, declare it explicitly:
     @router.get("/me/connections")
@@ -74,8 +74,7 @@ def get_current_user(
         The User ORM model instance for the current session.
 
     Raises:
-        HTTPException(500): If a session user_id exists but has no matching
-            User row (indicates DB corruption or manual session manipulation).
+        HTTPException(401): If no user_id is in the session, or the user is not found.
     """
     user_id: int | None = request.session.get("user_id")
 
@@ -90,32 +89,18 @@ def get_current_user(
     )
 
     if user_id is None:
-        # ── First visit ──────────────────────────────────────────────────────
-        # No session yet.  Auto-create a User so routes always have a real
-        # identity to work with, even before any login flow is built.
-        user = User(display_name="Workspace User")
-        db.add(user)
-        db.commit()
-        db.refresh(user)               # populate user.id from the DB
-        request.session["user_id"] = user.id
-        log.info("[session] Created new workspace user id=%d  path=%s", user.id, request.url.path)
-        return user
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
 
     # ── Returning visit ──────────────────────────────────────────────────────
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
-        # The session references a user that no longer exists in the DB.
-        # Clear the stale session so the next request creates a fresh user.
         request.session.clear()
-        log.error(
-            "Session contained unknown user_id=%d — session cleared.", user_id
-        )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=(
-                "Session references a user that no longer exists. "
-                "Please refresh the page to start a new session."
-            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
         )
 
     return user

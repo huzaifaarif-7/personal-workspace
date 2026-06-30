@@ -1,4 +1,4 @@
-"""Huzaifa's Workspace — FastAPI app (single-domain Vercel deployment).
+"""Workspace — FastAPI app (single-domain Vercel deployment).
 
 Exposed to Vercel via /api/index.py. Only /api/* reaches this function, so docs
 and health live under /api too. Locally: uvicorn server.main:app --reload
@@ -22,6 +22,10 @@ from .github_routes import (                              # new GitHub OAuth + d
 from .google_routes import (                              # new Google OAuth + data routes
     auth_router as go_auth_router,
     google_router as go_google_router,
+)
+from .auth_routes import (                                # new User Auth routes
+    auth_router as local_auth_router,
+    user_router as local_user_router,
 )
 # Route modules — only import modules that define `router = APIRouter(...)`
 from . import dashboard, calendar
@@ -68,6 +72,10 @@ app.include_router(gh_github_router, prefix=settings.api_prefix)
 # Google OAuth + data routes
 app.include_router(go_auth_router,   prefix=settings.api_prefix)
 app.include_router(go_google_router, prefix=settings.api_prefix)
+
+# User Auth routes
+app.include_router(local_auth_router, prefix=settings.api_prefix)
+app.include_router(local_user_router, prefix=settings.api_prefix)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────

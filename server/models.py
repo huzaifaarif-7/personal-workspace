@@ -36,14 +36,15 @@ def _utcnow() -> datetime:
 class User(Base):
     """A workspace user.
 
-    There is no password/email login yet — identity is established via a
-    session cookie (see server.deps.get_current_user).  The schema is ready
-    for real auth fields to be added later (email, password_hash, etc.).
+    Identity is established via a session cookie containing the user ID.
+    Users sign up with their email and a hashed password.
     """
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
-    display_name = Column(String(120), nullable=False, default="Workspace User")
+    full_name = Column(String(120), nullable=False)
+    email = Column(String(320), unique=True, nullable=False, index=True)
+    password_hash = Column(String(256), nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_utcnow)
 
     # Back-references — allows user.github_connection and user.email_connection
@@ -55,7 +56,7 @@ class User(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<User id={self.id} display_name={self.display_name!r}>"
+        return f"<User id={self.id} full_name={self.full_name!r}>"
 
 
 # ---------------------------------------------------------------------------
