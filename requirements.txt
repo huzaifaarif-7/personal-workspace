@@ -14,3 +14,4 @@ python-dotenv>=1.0       # load .env into os.environ
 cryptography>=42.0       # Fernet symmetric token encryption
 itsdangerous>=2.2        # signed session cookies (used by Starlette SessionMiddleware)
 passlib[bcrypt]>=1.7.4   # password hashing
+psycopg2-binary>=2.9.9   # PostgreSQL adapter

@@ -16,15 +16,20 @@ Usage in a route:
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+import os
+
 # File-based SQLite at the repo root.  The path is relative to wherever the
 # process is started (normally the repo root when running uvicorn).
-DATABASE_URL = "sqlite:///./dashboard.db"
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dashboard.db")
+
+
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 # `check_same_thread=False` is required for SQLite when the same connection
 # object may be used across threads (FastAPI uses a thread-pool executor).
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args=connect_args,
     # Echo SQL to stdout — flip to True when troubleshooting queries.
     echo=False,
 )
