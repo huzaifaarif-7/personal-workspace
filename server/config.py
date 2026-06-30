@@ -28,7 +28,10 @@ class Settings(BaseSettings):
     # GitHub OAuth
     github_client_id: str | None = None
     github_client_secret: str | None = None
+    # github_callback_url reads GITHUB_CALLBACK_URL (legacy field, kept for compat)
     github_callback_url: str = "http://localhost:8000/api/auth/github/callback"
+    # github_redirect_uri reads GITHUB_REDIRECT_URI — used by the new OAuth routes
+    github_redirect_uri: str = "http://localhost:8000/api/auth/github/callback"
 
     # Google OAuth (Calendar + Gmail)
     google_client_id: str | None = None

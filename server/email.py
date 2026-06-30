@@ -1,7 +1,7 @@
 """Email (Gmail) endpoints (live with fallback)."""
 from fastapi import APIRouter
-from .. import schemas
-from ..services import data
+from . import schemas
+from . import data
 
 router = APIRouter(prefix="/email", tags=["email"])
 

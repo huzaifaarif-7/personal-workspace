@@ -7,10 +7,10 @@ lazily so a missing optional library degrades to demo mode instead of a boot err
 """
 import logging
 
-from .. import schemas
-from ..config import get_settings
+from . import schemas
+from .config import get_settings
 from . import mock_data, store
-from .clients._util import ago
+from ._util import ago
 
 log = logging.getLogger("workspace")
 settings = get_settings()
@@ -41,7 +41,7 @@ def slack_messages() -> list[schemas.SlackMessage]:
     if not settings.slack_user_token:
         return mock_data.slack_messages()
     def live():
-        from .clients import slack
+        from . import slack
         return slack.messages(settings.slack_user_token)
     msgs = _try("slack", live, mock_data.slack_messages)
     return msgs or mock_data.slack_messages()
@@ -52,7 +52,7 @@ def github_activity() -> list[schemas.GithubActivity]:
     if not tok:
         return mock_data.github_activity()
     def live():
-        from .clients import github
+        from . import github
         return github.activity(tok["access_token"])
     items = _try("github", live, mock_data.github_activity)
     return items or mock_data.github_activity()
@@ -62,7 +62,7 @@ def calendly_overview() -> schemas.CalendlyOverview:
     if not settings.calendly_token:
         return mock_data.calendly_overview()
     def live():
-        from .clients import calendly
+        from . import calendly
         return calendly.overview(settings.calendly_token)
     return _try("calendly", live, mock_data.calendly_overview)
 
@@ -72,7 +72,7 @@ def calendar_events() -> list[schemas.CalendarEvent]:
     if not tok:
         return mock_data.calendar_events()
     def live():
-        from .clients import google
+        from . import google
         return google.calendar_events(tok)
     return _try("gcal", live, mock_data.calendar_events)
 
@@ -86,7 +86,7 @@ def create_event(req: schemas.CreateEventRequest) -> schemas.CalendarEvent:
     tok = store.get("google")
     if tok:
         try:
-            from .clients import google
+            from . import google
             return google.create_event(tok, req)
         except Exception as e:  # noqa: BLE001
             log.warning("live create_event failed (%s) — writing to demo store", e)
@@ -98,7 +98,7 @@ def emails() -> list[schemas.EmailMessage]:
     if not tok:
         return mock_data.emails()
     def live():
-        from .clients import google
+        from . import google
         return google.emails(tok)
     items = _try("email", live, mock_data.emails)
     return items or mock_data.emails()

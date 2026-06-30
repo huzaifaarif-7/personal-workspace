@@ -1,7 +1,7 @@
 """GitHub integration — pulls your recent activity feed using an OAuth token."""
 import httpx
 
-from ... import schemas
+from . import schemas
 from ._util import parse_iso
 
 API = "https://api.github.com"

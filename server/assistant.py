@@ -9,7 +9,7 @@ from datetime import datetime
 
 import httpx
 
-from ..config import get_settings
+from .config import get_settings
 from . import data
 
 settings = get_settings()

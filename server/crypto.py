@@ -35,7 +35,11 @@ from cryptography.fernet import Fernet, InvalidToken
 # Key loading — hard-fail if missing
 # ---------------------------------------------------------------------------
 
-_raw_key = os.environ.get("TOKEN_ENCRYPTION_KEY")
+# _raw_key = os.environ.get("TOKEN_ENCRYPTION_KEY")
+from .config import get_settings
+
+settings = get_settings()
+_raw_key = settings.token_encryption_key
 if not _raw_key:
     raise RuntimeError(
         "TOKEN_ENCRYPTION_KEY environment variable is not set.\n"

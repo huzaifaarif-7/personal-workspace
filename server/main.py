@@ -2,6 +2,11 @@
 
 Exposed to Vercel via /api/index.py. Only /api/* reaches this function, so docs
 and health live under /api too. Locally: uvicorn server.main:app --reload
+
+Import note: All server modules are flat in server/ — there are no routers/ or
+services/ subdirectories on disk.  Only the four modules that define an APIRouter
+(oauth, dashboard, calendar, email) are registered below; the others (slack,
+github, calendly, assistant, google) are pure service/client modules.
 """
 import logging
 from fastapi import FastAPI
@@ -9,9 +14,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config import get_settings
-from .database import Base, engine          # for create_all on startup
-from .routers import (assistant, calendar, calendly, dashboard,
-                      email, github, oauth, slack)
+from .database import Base, engine                        # for create_all on startup
+from .github_routes import (                              # new GitHub OAuth + data routes
+    auth_router as gh_auth_router,
+    github_router as gh_github_router,
+)
+# Route modules — only import modules that define `router = APIRouter(...)`
+from . import oauth, dashboard, calendar, email
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -43,8 +52,14 @@ app.add_middleware(
     allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
 )
 
-for r in (oauth, dashboard, slack, calendar, calendly, github, email, assistant):
+# ── Routers ───────────────────────────────────────────────────────────────────
+# Legacy routes (Google OAuth, dashboard aggregate, calendar, email)
+for r in (oauth, dashboard, calendar, email):
     app.include_router(r.router, prefix=settings.api_prefix)
+
+# GitHub OAuth + data routes
+app.include_router(gh_auth_router,   prefix=settings.api_prefix)
+app.include_router(gh_github_router, prefix=settings.api_prefix)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
@@ -69,5 +84,5 @@ def _create_tables() -> None:
 
 @app.get("/api/health", tags=["meta"])
 def health():
-    from .services import data
+    from . import data
     return {"status": "ok", "service": settings.app_name, "connected": data.status()}

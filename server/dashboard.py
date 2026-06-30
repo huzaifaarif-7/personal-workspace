@@ -1,6 +1,6 @@
 """Single aggregate endpoint the frontend calls on load."""
 from fastapi import APIRouter
-from ..services import data
+from . import data
 
 router = APIRouter(tags=["dashboard"])
 

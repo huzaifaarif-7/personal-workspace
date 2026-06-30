@@ -8,7 +8,7 @@ only these functions change.
 from datetime import datetime, timedelta
 from uuid import uuid4
 
-from .. import schemas
+from . import schemas
 
 _now = datetime.now
 

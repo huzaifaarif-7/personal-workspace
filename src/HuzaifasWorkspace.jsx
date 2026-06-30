@@ -381,7 +381,7 @@ function useCountdown(events) {
    ========================================================================= */
 const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE) ||
-  "http://localhost:8000/api";   // set VITE_API_BASE in production; "" forces demo-only
+  "/api";   // relative path → routes through the Vite dev server proxy to localhost:8000
 
 const ICOLOR = { slack: "var(--slack)", gcal: "var(--gcal)", calendly: "var(--cly)",
                  cly: "var(--cly)", github: "var(--gh)", gh: "var(--gh)", email: "var(--email)" };
@@ -408,7 +408,10 @@ function adaptPayload(p) {
 }
 
 async function fetchDashboard() {
-  const r = await fetch(`${API_BASE}/dashboard`, { headers: { Accept: "application/json" } });
+  const r = await fetch(`${API_BASE}/dashboard`, {
+    headers: { Accept: "application/json" },
+    credentials: "include",   // send session cookie for cross-origin requests
+  });
   if (!r.ok) throw new Error("dashboard " + r.status);
   return adaptPayload(await r.json());
 }
@@ -466,6 +469,7 @@ export default function App() {
     if (mode === "live" && API_BASE) {
       fetch(`${API_BASE}/calendar/events`, {
         method: "POST", headers: { "Content-Type": "application/json" },
+        credentials: "include",   // send session cookie for cross-origin requests
         body: JSON.stringify({
           title: ev.title, start: ev.start.toISOString(), end: ev.end.toISOString(),
           priority: ev.priority || "medium", add_meet: !!ev.meet,
@@ -825,26 +829,181 @@ function MessagesView({ slack }) {
 }
 
 /* ---------------------------- GitHub view ---------------------------- */
-function GithubView({ github }) {
+function GithubView() {
+  const [status, setStatus] = useState("loading"); // loading, connected, disconnected, rate_limited, error
+  const [data, setData] = useState(null);
+
+  const checkStatus = () => {
+    setStatus("loading");
+    fetch(`${API_BASE}/github/status`, { credentials: "include" })
+      .then(r => r.json())
+      .then(res => {
+        if (res.connected) {
+          fetch(`${API_BASE}/github/summary`, { credentials: "include" })
+            .then(r => {
+              if (r.status === 401) { setStatus("disconnected"); return null; }
+              if (r.status === 429) { setStatus("rate_limited"); return null; }
+              if (!r.ok) throw new Error("bad status");
+              return r.json();
+            })
+            .then(summary => {
+              if (summary) { setData(summary); setStatus("connected"); }
+            })
+            .catch(() => setStatus("error"));
+        } else {
+          setStatus("disconnected");
+        }
+      })
+      .catch(() => setStatus("error"));
+  };
+
+  useEffect(() => {
+    if (!API_BASE) return;
+    let alive = true;
+    setStatus("loading");
+    fetch(`${API_BASE}/github/status`, { credentials: "include" })
+      .then(r => r.json())
+      .then(res => {
+        if (!alive) return;
+        if (res.connected) {
+          fetch(`${API_BASE}/github/summary`, { credentials: "include" })
+            .then(r => {
+              if (!alive) return null;
+              if (r.status === 401) { setStatus("disconnected"); return null; }
+              if (r.status === 429) { setStatus("rate_limited"); return null; }
+              if (!r.ok) throw new Error("bad status");
+              return r.json();
+            })
+            .then(summary => {
+              if (alive && summary) { setData(summary); setStatus("connected"); }
+            })
+            .catch(() => { if (alive) setStatus("error"); });
+        } else {
+          setStatus("disconnected");
+        }
+      })
+      .catch(() => { if (alive) setStatus("error"); });
+    return () => { alive = false; };
+  }, []);
+
+  const disconnect = () => {
+    setStatus("loading");
+    fetch(`${API_BASE}/auth/github/disconnect`, { method: "POST", credentials: "include" })
+      .then(() => checkStatus())
+      .catch(() => checkStatus());
+  };
+
+  const connect = () => {
+    window.location.href = `${API_BASE}/auth/github/login`;
+  };
+
+  const timeAgo = (ds) => {
+    if (!ds) return "";
+    const m = Math.floor((Date.now() - new Date(ds).getTime()) / 60000);
+    if (m < 60) return `${Math.max(0, m)}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  };
+
+  const renderList = (items, title, icon, emptyText, renderItem) => (
+    <div style={{ marginBottom: 24 }}>
+      <h3 style={{ fontSize: 14, fontWeight: 650, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+        {icon} {title} <span style={{ fontSize: 11, color: "var(--dim)", fontWeight: 500, background: "var(--inset)", padding: "2px 6px", borderRadius: 10 }}>{items?.length || 0}</span>
+      </h3>
+      <div className="card"><div className="card-b" style={{ padding: items?.length ? "8px" : "16px 20px" }}>
+        {items && items.length > 0 ? items.map(renderItem) : (
+          <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>{emptyText}</div>
+        )}
+      </div></div>
+    </div>
+  );
+
   return (
     <div>
-      <ViewHead title="GitHub activity" sub="Recent commits, pull requests & contributors"
-        action={<a className="btn primary" href="https://github.com" target="_blank" rel="noreferrer"><Github size={14} /> Open GitHub</a>} />
-      <div className="card"><div className="card-b">
-        {github.map((g) => (
-          <div className="row" key={g.id}>
-            <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
-              {g.pr ? <GitCommit size={16} color="var(--teal)" /> : <GitCommit size={16} color="var(--gh)" />}
-            </div>
-            <div className="body">
-              <div className="top"><span className="name"><b style={{ color: "#fff" }}>{g.actor}</b> {g.action}</span>
-                <span className="time">{g.time} ago</span></div>
-              <div className="text"><b style={{ color: "var(--primary-2)" }}>{g.repo}</b> — {g.message}</div>
-            </div>
-            {g.commits > 0 && <span className="pill" style={{ alignSelf: "center", background: "var(--inset)", color: "var(--dim)", border: "1px solid var(--border)" }}><Star size={11} /> {g.commits} commits</span>}
+      <ViewHead title="GitHub" sub="Notifications, PRs, Issues & Activity"
+        action={
+          status === "connected" ? (
+            <button className="link-btn" onClick={disconnect} style={{ color: "var(--faint)", background: "transparent", border: "none" }}>Disconnect</button>
+          ) : status === "disconnected" ? (
+            <button className="btn primary" onClick={connect}><Github size={14} /> Connect GitHub</button>
+          ) : null
+        } />
+      
+      {status === "loading" && <div style={{ color: "var(--dim)", fontSize: 14, padding: "20px 0" }}>Loading...</div>}
+      
+      {status === "rate_limited" && <div style={{ color: "var(--amber)", fontSize: 14, padding: "16px 20px", background: "rgba(245,181,68,0.1)", border: "1px solid rgba(245,181,68,0.2)", borderRadius: 12, marginBottom: 20 }}>GitHub rate limit reached, try again later.</div>}
+      
+      {status === "error" && <div style={{ color: "var(--rose)", fontSize: 14, padding: "16px 20px", background: "rgba(255,107,138,0.1)", border: "1px solid rgba(255,107,138,0.2)", borderRadius: 12, marginBottom: 20 }}>An error occurred while fetching GitHub data.</div>}
+      
+      {status === "disconnected" && (
+        <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--card)", borderRadius: "var(--radius)", border: "1px solid var(--border-soft)", marginTop: 20 }}>
+          <Github size={48} color="var(--faint)" style={{ margin: "0 auto 16px" }} />
+          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Connect your GitHub</h2>
+          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your notifications, review requests, assigned issues, and recent activity right from your dashboard.</p>
+          <button className="btn primary" onClick={connect}><Github size={14} /> Connect GitHub</button>
+        </div>
+      )}
+
+      {status === "connected" && data && (
+        <div className="grid" style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {renderList(data.notifications, "Notifications", <Bell size={15} color="var(--amber)" />, "No new notifications 🎉", (n) => (
+              <a href={n.url} target="_blank" rel="noreferrer" className="row" key={n.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
+                <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
+                  <Bell size={15} color="var(--amber)" />
+                </div>
+                <div className="body">
+                  <div className="top">
+                    {n.unread && <span className="unread-dot" />}
+                    <span className="name"><b style={{ color: "#fff" }}>{n.repo}</b></span>
+                    <span className="time">{timeAgo(n.updated_at)}</span>
+                  </div>
+                  <div className="text">{n.title} <span style={{ color: "var(--faint)" }}>({n.reason})</span></div>
+                </div>
+              </a>
+            ))}
+            
+            {renderList(data.pull_requests, "Pull requests awaiting review", <GitCommit size={15} color="var(--teal)" />, "No PRs waiting for your review", (pr) => (
+              <a href={pr.url} target="_blank" rel="noreferrer" className="row" key={pr.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
+                <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
+                  <GitCommit size={15} color="var(--teal)" />
+                </div>
+                <div className="body">
+                  <div className="top"><span className="name"><b style={{ color: "#fff" }}>{pr.repo}</b></span><span className="time">{timeAgo(pr.updated_at)}</span></div>
+                  <div className="text">{pr.title}</div>
+                </div>
+              </a>
+            ))}
           </div>
-        ))}
-      </div></div>
+          
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {renderList(data.assigned_issues, "Assigned issues", <CheckCircle2 size={15} color="var(--rose)" />, "No open issues assigned to you", (iss) => (
+              <a href={iss.url} target="_blank" rel="noreferrer" className="row" key={iss.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
+                <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
+                  <CheckCircle2 size={15} color="var(--rose)" />
+                </div>
+                <div className="body">
+                  <div className="top"><span className="name"><b style={{ color: "#fff" }}>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
+                  <div className="text">{iss.title}</div>
+                </div>
+              </a>
+            ))}
+
+            {renderList(data.recent_activity, "Recent activity", <Github size={15} color="var(--gh)" />, "No recent activity", (act, i) => (
+              <div className="row" key={i} style={{ display: "flex" }}>
+                <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
+                  <Github size={15} color="var(--gh)" />
+                </div>
+                <div className="body">
+                  <div className="top"><span className="name"><b style={{ color: "#fff" }}>{act.repo}</b></span><span className="time">{timeAgo(act.created_at)}</span></div>
+                  <div className="text">{act.summary}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -999,6 +1158,7 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
       try {
         const res = await fetch(`${API_BASE}/assistant/query`, {
           method: "POST", headers: { "Content-Type": "application/json" },
+          credentials: "include",   // send session cookie for cross-origin requests
           body: JSON.stringify({ message: q, history }),
         });
         const json = await res.json();

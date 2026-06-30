@@ -79,6 +79,16 @@ def get_current_user(
     """
     user_id: int | None = request.session.get("user_id")
 
+    # ── DIAGNOSTIC: log session state for every request that calls this dep ──
+    raw_cookie = request.cookies.get("session", "")
+    log.info(
+        "[session] path=%s  cookie_present=%s  cookie_prefix=%r  session_user_id=%s",
+        request.url.path,
+        bool(raw_cookie),
+        raw_cookie[:20] if raw_cookie else None,
+        user_id,
+    )
+
     if user_id is None:
         # ── First visit ──────────────────────────────────────────────────────
         # No session yet.  Auto-create a User so routes always have a real
@@ -88,7 +98,7 @@ def get_current_user(
         db.commit()
         db.refresh(user)               # populate user.id from the DB
         request.session["user_id"] = user.id
-        log.info("Created new workspace user id=%d", user.id)
+        log.info("[session] Created new workspace user id=%d  path=%s", user.id, request.url.path)
         return user
 
     # ── Returning visit ──────────────────────────────────────────────────────
