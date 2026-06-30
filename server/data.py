@@ -4,13 +4,21 @@ Each function returns LIVE data when the integration is connected, and falls
 back to demo data (mock_data) on any error or when not connected — so the
 dashboard always renders something and never crashes. Clients are imported
 lazily so a missing optional library degrades to demo mode instead of a boot error.
+
+GitHub and Gmail use per-user DB connections (GitHubConnection / EmailConnection).
+When those providers are not connected for a user, the dashboard returns empty
+lists rather than demo notifications.
 """
 import logging
+
+from sqlalchemy.orm import Session
 
 from . import schemas
 from .config import get_settings
 from . import mock_data, store
-from ._util import ago
+from .crypto import decrypt_token
+from .models import EmailConnection, GitHubConnection, User
+from ._util import ago, parse_iso
 
 log = logging.getLogger("workspace")
 settings = get_settings()
@@ -18,12 +26,25 @@ settings = get_settings()
 
 # ---------- connection status ----------
 def status() -> dict[str, bool]:
+    """Legacy global status (env tokens + in-memory store). Prefer status_for_user."""
     return {
         "slack": bool(settings.slack_user_token),
         "gcal": store.has("google"),
         "calendly": bool(settings.calendly_token),
         "github": store.has("github"),
         "email": store.has("google"),
+    }
+
+
+def status_for_user(db: Session, user_id: int) -> dict[str, bool]:
+    gh = db.query(GitHubConnection).filter(GitHubConnection.user_id == user_id).first()
+    em = db.query(EmailConnection).filter(EmailConnection.user_id == user_id).first()
+    return {
+        "slack": bool(settings.slack_user_token),
+        "gcal": store.has("google"),
+        "calendly": bool(settings.calendly_token),
+        "github": gh is not None,
+        "email": em is not None,
     }
 
 
@@ -56,6 +77,19 @@ def github_activity() -> list[schemas.GithubActivity]:
         return github.activity(tok["access_token"])
     items = _try("github", live, mock_data.github_activity)
     return items or mock_data.github_activity()
+
+
+def github_activity_for_user(db: Session, user_id: int) -> list[schemas.GithubActivity]:
+    conn = db.query(GitHubConnection).filter(GitHubConnection.user_id == user_id).first()
+    if not conn:
+        return []
+    try:
+        from . import github
+        token = decrypt_token(conn.access_token_encrypted)
+        return github.activity(token)
+    except Exception as e:  # noqa: BLE001
+        log.warning("live github fetch for user_id=%s failed (%s)", user_id, e)
+        return []
 
 
 def calendly_overview() -> schemas.CalendlyOverview:
@@ -104,6 +138,33 @@ def emails() -> list[schemas.EmailMessage]:
     return items or mock_data.emails()
 
 
+async def emails_for_user(db: Session, user_id: int) -> list[schemas.EmailMessage]:
+    from .google_client import fetch_messages, get_valid_google_token
+
+    conn = db.query(EmailConnection).filter(EmailConnection.user_id == user_id).first()
+    if not conn:
+        return []
+    try:
+        token = await get_valid_google_token(db, conn)
+        raw = await fetch_messages(token)
+    except Exception as e:  # noqa: BLE001
+        log.warning("live email fetch for user_id=%s failed (%s)", user_id, e)
+        return []
+
+    out: list[schemas.EmailMessage] = []
+    for m in raw:
+        out.append(schemas.EmailMessage(
+            id=m["id"],
+            sender=m["sender"],
+            subject=m["subject"],
+            preview=m["snippet"],
+            timestamp=parse_iso(m["received_at"]),
+            unread=m["unread"],
+            important=m.get("important", False),
+        ))
+    return out
+
+
 # ---------- aggregate payload for the frontend ----------
 INTEGRATION_META = {
     "slack": ("Slack", "Mentions, DMs & channels"),
@@ -114,16 +175,16 @@ INTEGRATION_META = {
 }
 
 
-def dashboard_payload(user_name: str) -> dict:
-    st = status()
+async def dashboard_payload(user: User, db: Session) -> dict:
+    st = status_for_user(db, user.id)
     slack = slack_messages()
     cal = calendar_events()
     cly = calendly_overview()
-    gh = github_activity()
-    mail = emails()
+    gh = github_activity_for_user(db, user.id) if st["github"] else []
+    mail = await emails_for_user(db, user.id) if st["email"] else []
 
     return {
-        "user": {"name": user_name},
+        "user": {"name": user.full_name},
         "live": any(st.values()),
         "integrations": [
             {"id": k, "name": INTEGRATION_META[k][0],

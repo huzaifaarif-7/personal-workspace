@@ -107,6 +107,7 @@ async def _fetch_message_metadata(client: httpx.AsyncClient, token: str, message
         "subject": headers.get("Subject", "(no subject)"),
         "snippet": m.get("snippet", ""),
         "unread": "UNREAD" in labels,
+        "important": "IMPORTANT" in labels,
         "received_at": ts.isoformat()
     }
 
