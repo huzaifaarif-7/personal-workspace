@@ -596,7 +596,6 @@ export default function App() {
   useEffect(() => {
     if (user) {
       document.title = `${user.full_name}'s Workspace`;
-      setData(buildData(user.full_name));
       const done = localStorage.getItem(`onboarding_done_${user.id}`);
       setOnboard(!done);
     } else {
@@ -786,6 +785,8 @@ export default function App() {
 /* ---------------------------- Dashboard ---------------------------- */
 function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go }) {
   const { next, text } = useCountdown(events);
+  const ghConnected = data.integrations.find((i) => i.id === "gh")?.connected;
+  const emailConnected = data.integrations.find((i) => i.id === "email")?.connected;
   const stats = [
     { n: unreadSlack, l: "Slack mentions", ic: AtSign, c: "var(--slack)" },
     { n: todayEvents.length, l: "Meetings today", ic: Calendar, c: "var(--gcal)" },
@@ -868,9 +869,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
       </Card>
 
       {/* GitHub */}
-      <Card icon={Github} color="var(--gh)" title="GitHub activity" sub="Recent commits & PRs"
-        action={<a className="link-btn" href="https://github.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>}>
-        {data.github.slice(0, 4).map((g) => (
+      <Card icon={Github} color="var(--gh)" title="GitHub activity" sub={ghConnected ? "Recent commits & PRs" : "Not connected"}
+        action={ghConnected
+          ? <a className="link-btn" href="https://github.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
+          : <button type="button" className="link-btn" onClick={() => go("github")}>Connect <ArrowUpRight size={12} /></button>}>
+        {data.github.length > 0 ? data.github.slice(0, 4).map((g) => (
           <div className="row" key={g.id}>
             <Initials name={g.actor} />
             <div className="body">
@@ -881,13 +884,19 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
               <div className="text">{g.action} to <b>{g.repo}</b> — {g.message}</div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
+            {ghConnected ? "No recent GitHub activity" : "Connect GitHub in Settings to see activity here"}
+          </div>
+        )}
       </Card>
 
       {/* Email */}
-      <Card icon={Mail} color="var(--email)" title="Inbox" sub={`${data.email.filter((e) => e.unread).length} unread`}
-        action={<a className="link-btn" href="https://mail.google.com" target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>}>
-        {data.email.slice(0, 4).map((e) => (
+      <Card icon={Mail} color="var(--email)" title="Inbox" sub={emailConnected ? `${data.email.filter((e) => e.unread).length} unread` : "Not connected"}
+        action={emailConnected
+          ? <a className="link-btn" href="https://mail.google.com" target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>
+          : <button type="button" className="link-btn" onClick={() => go("email")}>Connect <ArrowUpRight size={12} /></button>}>
+        {data.email.length > 0 ? data.email.slice(0, 4).map((e) => (
           <div className="row" key={e.id}>
             <Initials name={e.from} />
             <div className="body">
@@ -900,7 +909,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
               <div className="text"><b>{e.subject}</b> — {e.preview}</div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
+            {emailConnected ? "No new emails 🎉" : "Connect Gmail in Settings to see your inbox here"}
+          </div>
+        )}
       </Card>
 
       {/* Calendly */}
@@ -1452,8 +1465,12 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
       addEvent(ev);
       return `Done ✅ I've added "New Meeting" to your calendar for ${tomorrow ? "tomorrow" : "today"} at ${fmtTime(d)} with a Google Meet link. You can rename it from the Calendar tab.`;
     }
-    if (/today|happening|summary|catch.*up|brief/.test(t) || t.length < 4)
-      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]} 👋\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n• ${c.github[0].who} pushed updates to ${c.github[0].repo}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
+    if (/today|happening|summary|catch.*up|brief/.test(t) || t.length < 4) {
+      const ghLine = c.github.length
+        ? `• ${c.github[0].who} pushed updates to ${c.github[0].repo}`
+        : "• No recent GitHub activity";
+      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]} 👋\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n${ghLine}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
+    }
     return `I can summarize your day, check Slack mentions, urgent emails, GitHub activity, or tomorrow's meetings — and I can create events for you. Try "What's happening today?"`;
   };
 
