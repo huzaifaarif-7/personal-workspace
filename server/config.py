@@ -1,5 +1,6 @@
 """Application configuration loaded from environment variables (.env)."""
 from functools import lru_cache
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     # TOKEN_ENCRYPTION_KEY is also read directly by crypto.py at import time
     # (with a hard RuntimeError if missing).  Declaring it here too lets
     # pydantic-settings validate it and expose it via get_settings().
-    token_encryption_key: str | None = None
+    token_encryption_key: str
 
     # Auth (legacy JWT fields — kept for backward compatibility)
     jwt_secret: str = "change-me"
@@ -26,16 +27,16 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60 * 24
 
     # GitHub OAuth
-    github_client_id: str | None = None
-    github_client_secret: str | None = None
+    github_client_id: str
+    github_client_secret: str
     # github_callback_url reads GITHUB_CALLBACK_URL (legacy field, kept for compat)
     github_callback_url: str = "http://localhost:8000/api/auth/github/callback"
     # github_redirect_uri reads GITHUB_REDIRECT_URI — used by the new OAuth routes
     github_redirect_uri: str = "http://localhost:8000/api/auth/github/callback"
 
     # Google OAuth (Calendar + Gmail)
-    google_client_id: str | None = None
-    google_client_secret: str | None = None
+    google_client_id: str
+    google_client_secret: str
     google_callback_url: str = "http://localhost:8000/api/auth/google/callback"
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
 
@@ -65,4 +66,22 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    try:
+        return Settings()
+    except ValidationError as e:
+        missing_vars = []
+        for error in e.errors():
+            loc = error.get("loc", [])
+            if loc:
+                missing_vars.append(str(loc[0]).upper())
+        
+        raise RuntimeError(
+            f"\n\n========================================================================\n"
+            f"CRITICAL CONFIGURATION ERROR: Missing required environment variables!\n"
+            f"The following environment variables must be set for the application to start:\n"
+            f"  {', '.join(missing_vars)}\n\n"
+            f"Please verify that these variables are defined in your .env file (for local development)\n"
+            f"or in your Vercel Project Settings -> Environment Variables (for deployment).\n"
+            f"========================================================================\n"
+        ) from e
+

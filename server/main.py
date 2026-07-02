@@ -29,6 +29,8 @@ from .auth_routes import (                                # new User Auth routes
 )
 # Route modules — only import modules that define `router = APIRouter(...)`
 from . import dashboard, calendar
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -39,6 +41,16 @@ app = FastAPI(
                 "Gmail and an AI assistant. Live data with graceful demo fallback.",
     docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json",
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    logging.getLogger("workspace").exception("Unhandled exception:")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "internal_server_error", "detail": str(exc)}
+    )
+
 
 # ── Middleware ───────────────────────────────────────────────────────────────
 # SessionMiddleware MUST be added before CORSMiddleware so that session data
