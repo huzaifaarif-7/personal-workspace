@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config import get_settings
-from .database import Base, engine                        # for create_all on startup
+from .database import Base, engine                        # tables created at import time in database._init_db()
 from .github_routes import (                              # new GitHub OAuth + data routes
     auth_router as gh_auth_router,
     github_router as gh_github_router,
@@ -91,23 +91,10 @@ app.include_router(local_user_router, prefix=settings.api_prefix)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
-@app.on_event("startup")
-def _create_tables() -> None:
-    """Create all ORM tables on startup if they don't exist yet.
-
-    Using create_all() is appropriate while there is no Alembic migration
-    history.  Once you introduce Alembic, remove this call and run
-    `alembic upgrade head` instead.
-
-    Importing models here (not at module level) avoids circular imports
-    while still ensuring all Table objects are registered on Base.metadata
-    before create_all() is called.
-    """
-    import server.models  # noqa: F401 — registers User, GitHubConnection, EmailConnection
-    Base.metadata.create_all(bind=engine)
-    logging.getLogger("workspace").info(
-        "Database tables verified / created (dashboard.db)"
-    )
+# NOTE: Base.metadata.create_all() is called at module-import time in
+# server/database.py (_init_db).  On Vercel serverless, @app.on_event("startup")
+# handlers are NOT guaranteed to fire before the first request arrives, so we
+# must not rely on them for table creation.  No startup event handler needed.
 
 
 @app.get("/api/health", tags=["meta"])

@@ -20,12 +20,11 @@ import os
 
 # File-based SQLite at the repo root.  The path is relative to wherever the
 # process is started (normally the repo root when running uvicorn).
+# On Vercel, VERCEL env var is automatically set; /tmp is the only writable dir.
 if os.environ.get("VERCEL"):
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/dashboard.db")
 else:
     DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dashboard.db")
-
-
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
@@ -46,6 +45,28 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Every ORM model inherits from Base so SQLAlchemy can track them collectively
 # and create/drop all tables via Base.metadata.create_all(engine).
 Base = declarative_base()
+
+
+def _init_db() -> None:
+    """Create all ORM tables at import time.
+
+    IMPORTANT: On Vercel serverless, @app.on_event('startup') handlers are NOT
+    guaranteed to run before the first request.  Tables must be created here, at
+    module level, so they exist for every cold-start invocation.
+
+    Import models inside this function to avoid circular imports — models.py
+    imports Base from this module, so importing models at the top of this module
+    would create a cycle.  The local import is fine; Python caches modules.
+    """
+    import logging
+    import server.models  # noqa: F401 — registers User, GitHubConnection, EmailConnection
+    Base.metadata.create_all(bind=engine)
+    logging.getLogger("workspace").info(
+        "[database] Tables verified / created at: %s", DATABASE_URL
+    )
+
+
+_init_db()
 
 
 def get_db():

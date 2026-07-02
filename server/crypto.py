@@ -40,7 +40,7 @@ from passlib.context import CryptContext
 from .config import get_settings
 
 settings = get_settings()
-_raw_key = settings.token_encryption_key
+_raw_key = (settings.token_encryption_key or "").strip()
 if not _raw_key:
     raise RuntimeError(
         "TOKEN_ENCRYPTION_KEY environment variable is not set.\n"
@@ -54,7 +54,8 @@ try:
     _fernet = Fernet(_raw_key.encode())
 except Exception as exc:
     raise RuntimeError(
-        f"TOKEN_ENCRYPTION_KEY is set but is not a valid Fernet key: {exc}\n"
+        f"TOKEN_ENCRYPTION_KEY is invalid or malformed: {exc}\n"
+        "Common causes: leading/trailing whitespace, wrong length, or bad base64 padding.\n"
         "Regenerate it with:\n"
         "  python -c \"from cryptography.fernet import Fernet; "
         "print(Fernet.generate_key().decode())\""
