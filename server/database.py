@@ -21,10 +21,21 @@ import os
 # File-based SQLite at the repo root.  The path is relative to wherever the
 # process is started (normally the repo root when running uvicorn).
 # On Vercel, VERCEL env var is automatically set; /tmp is the only writable dir.
-if os.environ.get("VERCEL"):
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/dashboard.db")
+# Check for Vercel Postgres or Supabase
+if os.environ.get("POSTGRES_URL"):
+    db_url = os.environ.get("POSTGRES_URL")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = db_url
+elif os.environ.get("DATABASE_URL"):
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = db_url
+elif os.environ.get("VERCEL"):
+    DATABASE_URL = "sqlite:////tmp/dashboard.db"
 else:
-    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./dashboard.db")
+    DATABASE_URL = "sqlite:///./dashboard.db"
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 

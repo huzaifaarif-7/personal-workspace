@@ -1,0 +1,56 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8
+
+    - name: Lint with flake8
+      run: |
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 server api --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings
+        flake8 server api --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Test with pytest
+      env:
+        TOKEN_ENCRYPTION_KEY: "test_key_which_must_be_thirty_two_bytes_long_in_base64"
+        SESSION_SECRET_KEY: "test_session"
+        GITHUB_CLIENT_ID: "test"
+        GITHUB_CLIENT_SECRET: "test"
+        GOOGLE_CLIENT_ID: "test"
+        GOOGLE_CLIENT_SECRET: "test"
+      run: |
+        # If you have tests, they will run here
+        # pytest
+        echo "Add tests here!"
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Node dependencies
+      run: npm ci
+
+    - name: Build frontend
+      run: npm run build
