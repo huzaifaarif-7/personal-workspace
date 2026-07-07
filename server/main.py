@@ -31,6 +31,7 @@ from .auth_routes import (                                # new User Auth routes
 from . import dashboard, calendar
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -45,6 +46,12 @@ app = FastAPI(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
+    if isinstance(exc, StarletteHTTPException):
+        content = exc.detail if isinstance(exc.detail, dict) else {"detail": exc.detail}
+        return JSONResponse(status_code=exc.status_code, content=content)
+    if isinstance(exc, RequestValidationError):
+        return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
     logging.getLogger("workspace").exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,
