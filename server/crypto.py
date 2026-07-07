@@ -30,7 +30,7 @@ Security notes
 import os
 
 from cryptography.fernet import Fernet, InvalidToken
-from passlib.context import CryptContext
+import bcrypt
 
 # ---------------------------------------------------------------------------
 # Key loading — hard-fail if missing
@@ -117,12 +117,17 @@ def decrypt_token(token: str) -> str:
 # Password hashing
 # ---------------------------------------------------------------------------
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def hash_password(plain_password: str) -> str:
     """Hashes a plaintext password using bcrypt."""
-    return pwd_context.hash(plain_password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(plain_password.encode("utf-8"), salt).decode("utf-8")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plaintext password against a hashed one."""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), 
+            hashed_password.encode("utf-8")
+        )
+    except (ValueError, TypeError):
+        return False
