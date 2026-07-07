@@ -37,6 +37,11 @@ def signup(req: SignupRequest, request: Request, db: Session = Depends(get_db)) 
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"error": "invalid_input", "reason": "password_too_short"}
         )
+    if len(req.password.encode("utf-8")) > 72:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"error": "invalid_input", "reason": "password_too_long"}
+        )
 
     log.info("signup: querying DB for existing user")
     existing_user = db.query(User).filter(User.email == req.email).first()
@@ -78,6 +83,12 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)) ->
     user = db.query(User).filter(User.email == req.email).first()
 
     log.info("login: verifying password (bcrypt — expect ~200-500ms)")
+    if len(req.password.encode("utf-8")) > 72:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"error": "invalid_credentials"}
+        )
+
     if not user or not verify_password(req.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
