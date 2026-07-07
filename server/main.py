@@ -9,6 +9,7 @@ services/ subdirectories on disk.  Only the four modules that define an APIRoute
 github, calendly, assistant, google) are pure service/client modules.
 """
 import logging
+import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -55,7 +56,11 @@ async def global_exception_handler(request, exc):
     logging.getLogger("workspace").exception("Unhandled exception:")
     return JSONResponse(
         status_code=500,
-        content={"error": "internal_server_error", "detail": str(exc)}
+        content={
+            "error": "internal_server_error", 
+            "detail": str(exc),
+            "traceback": traceback.format_exc()
+        }
     )
 
 

@@ -32,7 +32,8 @@ elif os.environ.get("DATABASE_URL"):
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     DATABASE_URL = db_url
-elif os.environ.get("VERCEL"):
+elif os.environ.get("VERCEL") or os.environ.get("AWS_EXECUTION_ENV") or os.path.exists("/var/task"):
+    # Serverless environments (Vercel/AWS Lambda) have a read-only filesystem except for /tmp
     DATABASE_URL = "sqlite:////tmp/dashboard.db"
 else:
     DATABASE_URL = "sqlite:///./dashboard.db"
