@@ -633,10 +633,10 @@ export default function App() {
           </button>
 
           <button className="icon-btn mobile-only" onClick={() => setNavOpen(true)}><Menu size={18} /></button>
-          <div className="greet">
+          { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
-            <p>{dateStr} · Here's everything across your workspace</p>
-          </div>
+            {/* { <p>{dateStr} · Here's everything across your workspace</p>} */}
+          </div> }
           <div className="search">
             <Search size={15} />
             <input placeholder="Search messages, events, repos…" />
