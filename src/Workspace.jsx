@@ -790,7 +790,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
             <Initials name={g.actor} />
             <div className="body">
               <div className="top">
-                <span className="name"><b style={{ color: "var(--bg)" }}>{g.actor}</b></span>
+                <span className="name"><b>{g.actor}</b></span>
                 <span className="time">{g.time} ago</span>
               </div>
               <div className="text">{g.action} to <b>{g.repo}</b> — {g.message}</div>
@@ -1099,7 +1099,7 @@ function GithubView() {
                 <div className="body">
                   <div className="top">
                     {n.unread && <span className="unread-dot" />}
-                    <span className="name"><b style={{ color: "var(--bg)" }}>{n.repo}</b></span>
+                    <span className="name"><b>{n.repo}</b></span>
                     <span className="time">{timeAgo(n.updated_at)}</span>
                   </div>
                   <div className="text">{n.title} <span style={{ color: "var(--text-muted)" }}>({n.reason})</span></div>
@@ -1113,7 +1113,7 @@ function GithubView() {
                   <GitCommit size={15} color="var(--teal)" />
                 </div>
                 <div className="body">
-                  <div className="top"><span className="name"><b style={{ color: "var(--bg)" }}>{pr.repo}</b></span><span className="time">{timeAgo(pr.updated_at)}</span></div>
+                  <div className="top"><span className="name"><b>{pr.repo}</b></span><span className="time">{timeAgo(pr.updated_at)}</span></div>
                   <div className="text">{pr.title}</div>
                 </div>
               </a>
@@ -1127,7 +1127,7 @@ function GithubView() {
                   <CheckCircle2 size={15} color="var(--rose)" />
                 </div>
                 <div className="body">
-                  <div className="top"><span className="name"><b style={{ color: "var(--bg)" }}>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
+                  <div className="top"><span className="name"><b>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
                   <div className="text">{iss.title}</div>
                 </div>
               </a>
@@ -1139,7 +1139,7 @@ function GithubView() {
                   <Github size={15} color="var(--gh)" />
                 </div>
                 <div className="body">
-                  <div className="top"><span className="name"><b style={{ color: "var(--bg)" }}>{act.repo}</b></span><span className="time">{timeAgo(act.created_at)}</span></div>
+                  <div className="top"><span className="name"><b>{act.repo}</b></span><span className="time">{timeAgo(act.created_at)}</span></div>
                   <div className="text">{act.summary}</div>
                 </div>
               </div>
@@ -1262,11 +1262,11 @@ function EmailView() {
               <div className="body">
                 <div className="top">
                   {e.unread && <span className="unread-dot" />}
-                  <span className="name" style={{ color: e.unread ? "#fff" : "inherit" }}>{e.sender}</span>
+                  <span className="name" >{e.sender}</span>
                   <span className="time">{timeAgo(e.received_at)}</span>
                 </div>
-                <div className="text" style={{ color: e.unread ? "var(--text)" : "var(--text-secondary)" }}>
-                  <b style={{ color: e.unread ? "#fff" : "inherit" }}>{e.subject}</b> — {e.snippet}
+                <div className="text" >
+                  <b >{e.subject}</b> — {e.snippet}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 6, alignSelf: "center" }}>
