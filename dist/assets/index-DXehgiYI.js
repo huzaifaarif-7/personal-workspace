@@ -367,10 +367,10 @@ Error generating stack: `+i.message+`
 
 /* modal / onboarding */
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: grid; place-items: center; padding: 24px; }
-.sheet { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-.sheet-h { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-.sheet-b { padding: 20px 24px; }
-.sheet-f { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+.sheet { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 48px); }
+.sheet-h { padding: 20px 24px; border-bottom: 1px solid var(--border); flex: none; }
+.sheet-b { padding: 20px 24px; overflow-y: auto; overscroll-behavior: contain; }
+.sheet-f { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; flex: none; }
 .steps { display: flex; gap: 8px; }
 .steps i { height: 4px; border-radius: 2px; background: var(--border); flex: 1; }
 .steps i.on { background: var(--primary); }
