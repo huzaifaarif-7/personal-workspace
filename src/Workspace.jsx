@@ -6,6 +6,12 @@ import {
   Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Zap, Bell, Sun, Moon
 } from "lucide-react";
 
+const Logo = ({ size = 28 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L22 20H2L12 2Z" />
+  </svg>
+);
+
 /* =========================================================================
    Huzaifa's Workspace — AI-powered personal productivity command center
    Single-file dashboard. Dark "twilight command center" identity.
