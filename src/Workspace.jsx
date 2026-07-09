@@ -382,7 +382,7 @@ function AuthView({ onAuthSuccess }) {
     <div className="auth-wrap">
       
         <div className="auth-header">
-          <div className="brand-mark">W</div>
+          <Logo size={32} />
           <div className="auth-title">Workspace</div>
         </div>
         
@@ -588,7 +588,7 @@ export default function App() {
       {navOpen && <div className="scrim mobile-only" onClick={() => setNavOpen(false)} />}
       <aside className={`side ${navOpen ? "open" : ""}`}>
         <div className="brand">
-          <div className="brand-mark"><Zap size={18} color="currentColor" /></div>
+          <Logo size={32} />
           <div>
             <div className="brand-name hw-display">Workspace</div>
             <div className="brand-sub">{user.full_name.split(' ')[0]}'s command center</div>
@@ -708,7 +708,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
   return (
     <div className="grid">
       {/* hero countdown */}
-      <div className="hero">
+      <div className="hero" style={{ justifyContent: "center" }}>
         <div className="glyph"><Clock size={26} color="currentColor" /></div>
         <div style={{ minWidth: 0 }}>
           <div className="eyebrow">Next up</div>
@@ -1484,7 +1484,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 1 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Connect your tools</h2>}
           {step === 2 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Grant permissions</h2>}
           {step === 3 && <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div className="brand-mark" style={{ width: 48, height: 48, borderRadius: 14 }}><Check size={24} color="currentColor" /></div>
+            <Logo size={32} />
             <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>You're all set!</h2>
           </div>}
         </div>
