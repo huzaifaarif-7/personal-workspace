@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
   Video, Link2, ChevronRight, X, Menu, AtSign, GitCommit, Star,
-  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Zap, Bell
+  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Zap, Bell, Sun, Moon
 } from "lucide-react";
 
 /* =========================================================================
@@ -25,6 +25,18 @@ const CSS = `
   --input-bg:#000000; --input-border:#333; --input-text:#EDEDED; --input-placeholder:#71717A;
   --radius:6px; --radius-sm:4px;
   --shadow:0 0 0 1px #333, 0 4px 12px rgba(0,0,0,0.5);
+}
+
+:root[data-theme="light"]{
+  --bg:#FFFFFF; --panel:#F7F7F7; --card:#FFFFFF; --card-2:#F0F0F0;
+  --inset:#F7F7F7; --border:#EAEAEA; --border-soft:#F5F5F5;
+  --text:#111111; --dim:#666666; --faint:#999999;
+  --primary:#111111; --primary-2:#000000; --teal:#0055FF; --blue:#0070F3;
+  --amber:#F5A623; --rose:#FF0080; --green:#0070F3;
+  --danger:var(--rose);
+  --slack:#000000; --gcal:#000000; --cly:#000000; --gh:#000000; --email:#000000;
+  --input-bg:#FFFFFF; --input-border:#EAEAEA; --input-text:#111111; --input-placeholder:#999999;
+  --shadow:0 0 0 1px #EAEAEA, 0 4px 12px rgba(0,0,0,0.05);
 }
 *{box-sizing:border-box}
 .hw, .hw *{font-family:'Inter',system-ui,-apple-system,sans-serif}
@@ -496,6 +508,13 @@ function AuthView({ onAuthSuccess }) {
    APP
    ========================================================================= */
 export default function App() {
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -670,6 +689,10 @@ export default function App() {
       {/* ============ CENTER ============ */}
       <main className="center">
         <header className="topbar">
+          <button className="icon-btn" onClick={toggleTheme}>
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+
           <button className="icon-btn mobile-only" onClick={() => setNavOpen(true)}><Menu size={18} /></button>
           <div className="greet">
             <h1 className="hw-display">{greeting}, {user.full_name.split(' ')[0]}</h1>
@@ -689,7 +712,7 @@ export default function App() {
             <span style={{ width: 8, height: 8, borderRadius: "50%",
               background: mode === "live" ? "var(--green)" : mode === "loading" ? "var(--amber)" : "var(--faint)" }}
               className={mode === "live" ? "" : ""} />
-            {mode === "live" ? "Live" : mode === "loading" ? "Syncing" : "Demo"}
+            {/* {mode === "live" ? "Live" : mode === "loading" ? "Syncing" : "Demo"} */}
           </div>
           <button className="icon-btn"><Bell size={17} /><span className="dot" /></button>
         </header>
