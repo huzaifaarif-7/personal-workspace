@@ -118,7 +118,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@40
 .empty-btn:hover { background: var(--surface); color: var(--text); }
 
 /* forms / auth */
-.auth-wrap { display: grid; place-items: center; min-height: 100vh; padding: 20px; background: var(--bg); }
+.auth-wrap { display: grid; place-items: center; min-height: 100vh; padding: 20px; background: var(--bg); color: var(--text); }
 .auth-card { width: 100%; max-width: 400px; background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 32px 28px; }
 .auth-header { text-align: center; margin-bottom: 32px; }
 .auth-title { font-size: 20px; font-weight: 500; color: var(--text); }
