@@ -11,253 +11,193 @@ import {
    Single-file dashboard. Dark "twilight command center" identity.
    ========================================================================= */
 
-const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@500;600;700&display=swap');
+const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-:root{
-  --bg:#000000; --panel:#0A0A0A; --card:#000000; --card-2:#111111;
-  --inset:#0A0A0A; --border:#333333; --border-soft:#222222;
-  --text:#EDEDED; --dim:#A1A1AA; --faint:#71717A;
-  --primary:#EDEDED; --primary-2:#FFFFFF; --teal:#3291FF; --blue:#0070F3;
-  --amber:#F5A623; --rose:#FF0080; --green:#50E3C2;
-  --danger:var(--rose);
-  --slack:#FFFFFF; --gcal:#FFFFFF; --cly:#FFFFFF; --gh:#FFFFFF; --email:#FFFFFF;
-  --input-bg:#000000; --input-border:#333; --input-text:#EDEDED; --input-placeholder:#71717A;
-  --radius:6px; --radius-sm:4px;
-  --shadow:0 0 0 1px #333, 0 4px 12px rgba(0,0,0,0.5);
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --card: #161616;
+  --border: #272727;
+  --border-strong: #333333;
+  --text: #ededed;
+  --text-secondary: #888888;
+  --text-muted: #555555;
+  --primary: #4f8ef7;
+  --primary-bg: rgba(79, 142, 247, 0.08);
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 8px;
 }
-
-:root[data-theme="light"]{
-  --bg:#FFFFFF; --panel:#F7F7F7; --card:#FFFFFF; --card-2:#F0F0F0;
-  --inset:#F7F7F7; --border:#EAEAEA; --border-soft:#F5F5F5;
-  --text:#111111; --dim:#666666; --faint:#999999;
-  --primary:#111111; --primary-2:#000000; --teal:#0055FF; --blue:#0070F3;
-  --amber:#F5A623; --rose:#FF0080; --green:#0070F3;
-  --danger:var(--rose);
-  --slack:#000000; --gcal:#000000; --cly:#000000; --gh:#000000; --email:#000000;
-  --input-bg:#FFFFFF; --input-border:#EAEAEA; --input-text:#111111; --input-placeholder:#999999;
-  --shadow:0 0 0 1px #EAEAEA, 0 4px 12px rgba(0,0,0,0.05);
+:root[data-theme="light"] {
+  --bg: #fafafa;
+  --surface: #f4f4f4;
+  --card: #ffffff;
+  --border: #e5e5e5;
+  --border-strong: #d4d4d4;
+  --text: #0a0a0a;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --primary: #2563eb;
+  --primary-bg: rgba(37, 99, 235, 0.06);
+  --danger: #dc2626;
+  --success: #16a34a;
 }
-*{box-sizing:border-box}
-.hw, .hw *{font-family:'Inter',system-ui,-apple-system,sans-serif}
-.hw-display{font-family:'Geist','Inter',sans-serif; letter-spacing:-0.04em}
-.hw{ background:var(--bg); color:var(--text); min-height:100vh; width:100%;
-  display:grid; grid-template-columns:240px 1fr 372px; grid-template-rows:100vh;
-  overflow:hidden; -webkit-font-smoothing:antialiased;
-}
+* { box-sizing: border-box; }
+.hw, .hw * { font-family: 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: normal; line-height: 1.5; }
+.hw { background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; display: grid; grid-template-columns: 220px 1fr 372px; grid-template-rows: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 13px; }
 
-/* ---------- scrollbars ---------- */
-.hw ::-webkit-scrollbar{width:8px;height:8px}
-.hw ::-webkit-scrollbar-thumb{background:#333;border-radius:4px;border:2px solid transparent;background-clip:padding-box}
-.hw ::-webkit-scrollbar-thumb:hover{background:#444;background-clip:padding-box}
+/* scrollbars */
+.hw ::-webkit-scrollbar { width: 8px; height: 8px; }
+.hw ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; border: 2px solid transparent; background-clip: padding-box; }
+.hw ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); background-clip: padding-box; }
 
-/* ---------- sidebar ---------- */
-.side{background:var(--bg); border-right:1px solid var(--border);
-  display:flex; flex-direction:column; padding:20px 14px; gap:6px; min-width:0; position:relative; z-index:30}
-.brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
-.brand-mark{width:28px;height:28px;border-radius:50%;background:var(--text);display:grid;place-items:center;flex:none;color:var(--bg)}
-.brand-name{font-weight:600;font-size:14px;letter-spacing:-.2px;line-height:1.1}
-.brand-sub{font-size:11px;color:var(--faint);letter-spacing:.3px}
-.nav-label{font-size:11px;letter-spacing:.05em;color:var(--faint);padding:14px 10px 8px;font-weight:500}
-.nav{display:flex;align-items:center;gap:11px;padding:8px 11px;border-radius:6px;color:var(--dim);
-  cursor:pointer;font-size:13px;font-weight:500;border:1px solid transparent;transition:.15s ease;position:relative}
-.nav:hover{background:var(--card-2);color:var(--text)}
-.nav.active{background:#222;color:#fff;}
-.nav .badge{margin-left:auto;background:var(--text);color:var(--bg);font-size:10.5px;font-weight:600;
-  min-width:18px;height:18px;border-radius:9px;display:grid;place-items:center;padding:0 5px}
-.side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:6px;
-  background:var(--bg);border:1px solid var(--border)}
-.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;flex:none;
-  background:#222;color:var(--text);border:1px solid var(--border)}
-.avatar.lg{width:40px;height:40px;font-size:14px}
+/* sidebar */
+.side { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 14px; gap: 6px; min-width: 0; position: relative; z-index: 30; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 18px; }
+.brand-mark { width: 28px; height: 28px; border-radius: 50%; background: var(--text); display: grid; place-items: center; flex: none; color: var(--bg); }
+.brand-name { font-weight: 500; font-size: 16px; color: var(--text); }
+.brand-sub { display: none; }
+.nav-label { font-size: 11px; color: var(--text-muted); padding: 14px 10px 8px; font-weight: 500; }
+.nav { display: flex; align-items: center; gap: 11px; height: 36px; padding: 0 16px; border-radius: var(--radius); color: var(--text-secondary); cursor: pointer; font-size: 13px; transition: .15s ease; position: relative; }
+.nav:hover { background: var(--card); }
+.nav.active { background: var(--card); color: var(--text); font-weight: 500; }
+.nav .badge { margin-left: auto; background: var(--primary); color: var(--bg); font-size: 10px; font-weight: 500; min-width: 16px; height: 16px; border-radius: 8px; display: grid; place-items: center; padding: 0 4px; }
+.nav .unread-dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--primary); }
+.side-foot { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius); background: transparent; border: none; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; font-weight: 500; font-size: 12px; flex: none; background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.avatar.lg { width: 40px; height: 40px; font-size: 14px; }
 
-/* ---------- center ---------- */
-.center{min-width:0;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-.topbar{display:flex;align-items:center;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border);
-  background:var(--bg);z-index:20}
-.greet{min-width:0}
-.greet h1{font-size:16px;font-weight:600;letter-spacing:-.2px;line-height:1.2}
-.greet p{font-size:13px;color:var(--dim);margin-top:2px}
-.search{margin-left:auto;display:flex;align-items:center;gap:9px;background:var(--bg);border:1px solid var(--border);
-  border-radius:6px;padding:8px 12px;width:300px;max-width:34vw;color:var(--dim);transition:.15s}
-.search:focus-within{border-color:var(--text)}
-.search input{background:none;border:none;outline:none;color:var(--text);font-size:13px;width:100%}
-.search input::placeholder{color:var(--faint)}
-.icon-btn{width:36px;height:36px;border-radius:6px;display:grid;place-items:center;flex:none;cursor:pointer;
-  background:var(--bg);border:1px solid var(--border);color:var(--dim);transition:.15s;position:relative}
-.icon-btn:hover{color:var(--text);border-color:#555;background:var(--card-2)}
-.icon-btn .dot{position:absolute;top:8px;right:9px;width:7px;height:7px;border-radius:50%;background:var(--rose);border:2px solid var(--bg)}
-.scroll{overflow-y:auto;padding:24px;flex:1}
+/* center */
+.center { min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+.topbar { display: flex; align-items: center; gap: 14px; padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--bg); z-index: 20; height: 64px; }
+.greet { min-width: 0; display: flex; align-items: center; gap: 6px; }
+.greet-text { font-size: 18px; color: var(--text-secondary); font-weight: 400; }
+.greet-name { font-size: 18px; color: var(--text); font-weight: 500; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 9px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; width: 300px; max-width: 34vw; color: var(--text-muted); transition: .15s; }
+.search:focus-within { border-color: var(--border-strong); }
+.search input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; width: 100%; }
+.search input::placeholder { color: var(--text-muted); }
+.icon-btn { width: 32px; height: 32px; border-radius: var(--radius); display: grid; place-items: center; flex: none; cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); transition: .15s; position: relative; }
+.icon-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface); }
+.scroll { overflow-y: auto; padding: 24px; flex: 1; }
 
-/* ---------- cards / grid ---------- */
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;align-items:start}
-.card{background:var(--bg);border:1px solid var(--border);
-  border-radius:var(--radius);overflow:hidden;}
-.card:hover{border-color:#444}
-.span2{grid-column:span 2}
-.card-h{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:1px solid var(--border-soft)}
-.card-h .ic{width:28px;height:28px;border-radius:4px;display:grid;place-items:center;flex:none}
-.card-h h3{font-size:14px;font-weight:600;letter-spacing:-.2px}
-.card-h .sub{font-size:12px;color:var(--faint)}
-.card-h .right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.card-b{padding:8px}
-.link-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--text);
-  cursor:pointer;padding:4px 8px;border-radius:4px;transition:.14s;border:1px solid transparent;text-decoration:none}
-.link-btn:hover{background:#222;border-color:#333}
-.row{display:flex;align-items:flex-start;gap:12px;padding:10px 12px;border-radius:6px;cursor:pointer;transition:.14s}
-.row:hover{background:#111}
-.row .body{min-width:0;flex:1}
-.row .top{display:flex;align-items:center;gap:8px}
-.row .name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .time{font-size:12px;color:var(--faint);margin-left:auto;white-space:nowrap;flex:none}
-.row .text{font-size:13px;color:var(--dim);margin-top:3px;line-height:1.5;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.row .text b{color:var(--text);font-weight:500}
-.unread-dot{width:6px;height:6px;border-radius:50%;background:var(--text);flex:none}
-.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;padding:2px 6px;border-radius:4px;white-space:nowrap}
-.tag-hi{background:#222;color:#EDEDED;border:1px solid #444}
-.tag-md{background:#222;color:#EDEDED;border:1px solid #444}
-.tag-lo{background:#222;color:#EDEDED;border:1px solid #444}
-.tag-imp{background:#300;color:var(--rose);border:1px solid #500}
+/* cards / grid */
+.grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: start; }
+.card { background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px; }
+.span2 { grid-column: span 2; }
+.card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.card-h .ic { width: 16px; height: 16px; display: grid; place-items: center; flex: none; color: var(--text-secondary); }
+.card-h h3 { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
+.card-h .right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.card-b { padding: 0; display: flex; flex-direction: column; }
+.link-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; color: var(--text); cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: .14s; border: 1px solid transparent; text-decoration: none; }
+.link-btn:hover { background: var(--surface); border-color: var(--border); }
+.row { display: flex; align-items: center; gap: 12px; padding: 10px 0; cursor: pointer; transition: .14s; border-bottom: 0.5px solid var(--border); }
+.row:last-child { border-bottom: none; }
+.row:hover { background: var(--primary-bg); }
+.row .body { min-width: 0; flex: 1; }
+.row .top { display: flex; align-items: center; gap: 8px; }
+.row .name { font-size: 13px; font-weight: 400; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row.unread .name { font-weight: 500; }
+.row .time { font-size: 11px; color: var(--text-muted); margin-left: auto; white-space: nowrap; flex: none; }
+.row .text { font-size: 11px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unread-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex: none; }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; padding: 2px 6px; border-radius: 4px; white-space: nowrap; background: var(--surface); color: var(--text-secondary); border: 1px solid var(--border); }
 
-/* ---------- forms / auth ---------- */
-.input-group{margin-bottom:16px}
-.input-label{color:var(--text);font-size:13px;font-weight:500;margin-bottom:8px;display:block}
-.input-field{width:100%;background:var(--input-bg);color:var(--input-text);border:1px solid var(--input-border);
-  border-radius:var(--radius-sm);padding:10px 12px;font-size:14px;transition:border-color .15s;outline:none}
-.input-field::placeholder{color:var(--input-placeholder)}
-.input-field:focus{border-color:var(--text);}
-.auth-error{color:var(--rose);background:#200;border:1px solid #500;
-  padding:10px 12px;border-radius:4px;font-size:13px;margin-bottom:16px}
-.auth-tabs{display:flex;background:#111;border:1px solid #333;border-radius:6px;padding:3px;margin-bottom:24px}
-.auth-tab{flex:1;text-align:center;padding:6px 0;font-size:13px;font-weight:500;color:var(--dim);
-  border-radius:4px;cursor:pointer;transition:.15s;border:none;background:none}
-.auth-tab.active{background:#333;color:var(--text);}
-.btn:disabled{opacity:.6;cursor:not-allowed}
+/* empty states */
+.empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 0; text-align: center; gap: 12px; }
+.empty-state .ic { color: var(--text-muted); margin-bottom: 4px; }
+.empty-state .text { font-size: 13px; color: var(--text-muted); }
+.empty-btn { display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; padding: 6px 12px; border-radius: var(--radius); cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text-secondary); }
+.empty-btn:hover { background: var(--surface); color: var(--text); }
 
-/* ---------- hero / countdown ---------- */
-.hero{grid-column:span 2;background:var(--bg);
-  border:1px solid var(--border);border-radius:var(--radius);padding:24px;
-  display:flex;align-items:center;gap:20px;}
-.hero .glyph{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;
-  background:#111;border:1px solid #333;}
-.hero .eyebrow{font-size:11px;letter-spacing:.05em;color:var(--faint);font-weight:500}
-.hero h2{font-size:20px;font-weight:600;letter-spacing:-.4px;margin-top:4px}
-.hero .meta{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap;color:var(--dim);font-size:13px}
-.hero .meta span{display:inline-flex;align-items:center;gap:6px}
-.count{margin-left:auto;text-align:right;flex:none}
-.count .num{font-family:'Geist';font-size:32px;font-weight:600;letter-spacing:-1px;color:var(--text)}
-.count .lbl{font-size:11px;color:var(--faint);letter-spacing:.05em;margin-top:2px}
+/* forms / auth */
+.auth-wrap { display: grid; place-items: center; min-height: 100vh; padding: 20px; background: var(--bg); }
+.auth-card { width: 100%; max-width: 400px; background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 32px 28px; }
+.auth-header { text-align: center; margin-bottom: 32px; }
+.auth-title { font-size: 20px; font-weight: 500; color: var(--text); }
+.input-group { margin-bottom: 16px; }
+.input-label { color: var(--text); font-size: 13px; font-weight: 500; margin-bottom: 8px; display: block; }
+.input-field { width: 100%; height: 36px; background: var(--card); color: var(--text); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 0 12px; font-size: 13px; transition: border-color .15s; outline: none; }
+.input-field::placeholder { color: var(--text-muted); }
+.input-field:focus { border-color: var(--border-strong); }
+.auth-error { color: var(--danger); font-size: 12px; margin-top: 4px; margin-bottom: 16px; text-align: center; }
+.auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.auth-tab { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 400; color: var(--text-muted); cursor: pointer; transition: .15s; border: none; background: none; border-bottom: 2px solid transparent; }
+.auth-tab.active { color: var(--text); border-bottom: 2px solid var(--primary); font-weight: 500; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 500; height: 36px; padding: 0 14px; border-radius: var(--radius); cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text); transition: .15s; }
+.btn:hover { background: var(--surface); }
+.btn.primary { background: var(--primary); border: none; color: #fff; width: 100%; }
+.btn.primary:hover { background: color-mix(in srgb, var(--primary) 85%, #000); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ---------- stat strip ---------- */
-.stats{grid-column:span 2;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.stat{background:var(--bg);border:1px solid var(--border);
-  border-radius:6px;padding:16px;}
-.stat .n{font-family:'Geist';font-size:24px;font-weight:600;letter-spacing:-.5px}
-.stat .l{font-size:13px;color:var(--dim);margin-top:4px}
-.stat .ic{width:24px;height:24px;border-radius:4px;display:grid;place-items:center;margin-bottom:8px;color:var(--text)}
+/* hero / countdown */
+.hero { grid-column: span 2; background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 24px; display: flex; align-items: center; gap: 20px; }
+.hero .glyph { width: 48px; height: 48px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--border); }
+.hero .eyebrow { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+.hero h2 { font-size: 18px; font-weight: 500; margin-top: 4px; }
+.hero .meta { display: flex; gap: 16px; margin-top: 8px; flex-wrap: wrap; color: var(--text-secondary); font-size: 13px; }
+.hero .meta span { display: inline-flex; align-items: center; gap: 6px; }
+.count { margin-left: auto; text-align: right; flex: none; }
+.count .num { font-size: 32px; font-weight: 500; color: var(--text); }
+.count .lbl { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
 
-/* ---------- live dot ---------- */
-.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text);font-weight:500}
-.live i{width:6px;height:6px;border-radius:50%;background:var(--text);}
+/* stat strip */
+.stats { grid-column: span 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.stat { background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px; }
+.stat .n { font-size: 24px; font-weight: 500; }
+.stat .l { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.stat .ic { width: 24px; height: 24px; border-radius: 4px; display: grid; place-items: center; margin-bottom: 8px; color: var(--text-secondary); }
 
-/* ---------- assistant panel ---------- */
-.assist{background:var(--bg);border-left:1px solid var(--border);
-  display:flex;flex-direction:column;min-width:0;position:relative;z-index:30}
-.assist-h{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px}
-.assist-h .who{min-width:0}
-.assist-h .who .nm{font-weight:600;font-size:14px;letter-spacing:-.2px;display:flex;align-items:center;gap:7px}
-.assist-h .who .st{font-size:12px;color:var(--dim);display:flex;align-items:center;gap:5px;margin-top:2px}
-.chat{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
-.msg{display:flex;gap:12px;max-width:92%;}
-.msg.me{align-self:flex-end;flex-direction:row-reverse}
-.bub{padding:10px 14px;border-radius:6px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
-.msg.ai .bub{background:#111;border:1px solid #333;}
-.msg.me .bub{background:#EDEDED;color:#000;}
-.mini-mascot{width:28px;height:28px;flex:none;align-self:flex-end;background:#222;border-radius:50%;display:grid;place-items:center;border:1px solid #444}
-.typing{display:flex;gap:4px;padding:12px}
-.typing i{width:6px;height:6px;border-radius:50%;background:#555;}
-.quick{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 16px}
-.chip{font-size:12px;font-weight:500;color:var(--text);background:var(--bg);border:1px solid var(--border);
-  border-radius:4px;padding:6px 10px;cursor:pointer;transition:.15s;white-space:nowrap}
-.chip:hover{background:#111;border-color:#555}
-.composer{padding:16px;border-top:1px solid var(--border)}
-.composer .box{display:flex;align-items:flex-end;gap:8px;background:var(--bg);border:1px solid var(--border);
-  border-radius:6px;padding:6px 6px 6px 12px;transition:.15s}
-.composer .box:focus-within{border-color:#555;}
-.composer textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:14px;
-  resize:none;max-height:110px;line-height:1.5;padding:6px 0;font-family:inherit}
-.composer textarea::placeholder{color:var(--faint)}
-.send-btn{width:32px;height:32px;border-radius:4px;border:none;flex:none;cursor:pointer;display:grid;place-items:center;
-  background:#EDEDED;color:#000;transition:.15s}
-.send-btn:hover{background:#FFF}
-.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+/* live dot */
+.live { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text); font-weight: 500; }
+.live i { width: 6px; height: 6px; border-radius: 50%; background: var(--success); }
 
-/* ---------- mascot ---------- */
-.mascot-wrap{display:grid;place-items:center}
+/* assistant panel */
+.assist { background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; min-width: 0; position: relative; z-index: 30; }
+.assist-h { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.assist-h .who { min-width: 0; }
+.assist-h .who .nm { font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 7px; color: var(--text); }
+.assist-h .who .st { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.msg { display: flex; gap: 12px; max-width: 92%; }
+.msg.me { align-self: flex-end; flex-direction: row-reverse; }
+.bub { padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.msg.ai .bub { background: var(--card); border: 0.5px solid var(--border); color: var(--text); }
+.msg.me .bub { background: var(--primary); color: #fff; }
+.typing { display: flex; gap: 4px; padding: 12px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+.quick { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 20px 16px; }
+.chip { font-size: 12px; font-weight: 500; color: var(--text-secondary); background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; cursor: pointer; transition: .15s; white-space: nowrap; }
+.chip:hover { background: var(--surface); border-color: var(--border-strong); color: var(--text); }
+.composer { padding: 16px; border-top: 1px solid var(--border); background: var(--bg); }
+.composer .box { display: flex; align-items: flex-end; gap: 8px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 6px 6px 12px; transition: .15s; }
+.composer .box:focus-within { border-color: var(--border-strong); }
+.composer textarea { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 13px; resize: none; max-height: 110px; line-height: 1.5; padding: 6px 0; font-family: inherit; }
+.composer textarea::placeholder { color: var(--text-muted); }
+.send-btn { width: 32px; height: 32px; border-radius: 4px; border: none; flex: none; cursor: pointer; display: grid; place-items: center; background: var(--primary); color: #fff; transition: .15s; }
+.send-btn:hover { background: color-mix(in srgb, var(--primary) 85%, #000); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ---------- settings / lists ---------- */
-.conn-card{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--border);
-  border-radius:6px;background:var(--bg);transition:.15s}
-.conn-card:hover{border-color:#555}
-.conn-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;flex:none;border:1px solid #333;background:#111}
-.btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;padding:8px 14px;border-radius:4px;
-  cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text);transition:.15s}
-.btn:hover{background:#111;border-color:#555}
-.btn.primary{background:#EDEDED;border:none;color:#000}
-.btn.primary:hover{background:#FFF}
-.btn.ghost{background:transparent;border-color:transparent}
-.btn.connected{color:var(--text);border-color:#333;background:#111}
+/* modal / onboarding */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: grid; place-items: center; padding: 24px; }
+.sheet { width: 100%; max-width: 480px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.sheet-h { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+.sheet-b { padding: 20px 24px; }
+.sheet-f { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+.steps { display: flex; gap: 8px; }
+.steps i { height: 4px; border-radius: 2px; background: var(--border); flex: 1; }
+.steps i.on { background: var(--primary); }
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 13px; color: var(--text); margin-bottom: 8px; font-weight: 500; }
+.field input, .field select { width: 100%; height: 36px; background: var(--card); border: 1px solid var(--border); border-radius: 4px; padding: 0 12px; color: var(--text); font-size: 13px; outline: none; }
+.field input:focus, .field select:focus { border-color: var(--border-strong); }
+.copy-link { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; font-size: 13px; color: var(--text); }
 
-/* ---------- modal / onboarding ---------- */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;
-  display:grid;place-items:center;padding:24px;}
-.sheet{width:100%;max-width:480px;background:#000;
-  border:1px solid #333;border-radius:8px;overflow:hidden;}
-.sheet-h{padding:20px 24px;border-bottom:1px solid #333}
-.sheet-b{padding:20px 24px}
-.sheet-f{padding:16px 24px;border-top:1px solid #333;display:flex;gap:12px;align-items:center}
-.steps{display:flex;gap:8px}
-.steps i{height:4px;border-radius:2px;background:#333;flex:1;}
-.steps i.on{background:#EDEDED}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:13px;color:var(--text);margin-bottom:8px;font-weight:500}
-.field input,.field select{width:100%;background:#000;border:1px solid #333;border-radius:4px;
-  padding:10px 12px;color:var(--text);font-size:14px;outline:none;}
-.field input:focus,.field select:focus{border-color:#666}
-.copy-link{display:flex;align-items:center;gap:10px;background:#000;border:1px solid #333;
-  border-radius:4px;padding:10px 12px;font-size:13px;color:var(--text)}
-.copy-link .url{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,monospace;}
-
-/* ---------- floating assistant button (mobile) ---------- */
-.fab{display:none;position:fixed;right:20px;bottom:20px;z-index:60;width:50px;height:50px;border-radius:25px;
-  border:none;cursor:pointer;background:#EDEDED;color:#000;place-items:center}
-.mobile-only{display:none}
-
-/* ---------- responsive ---------- */
-@media(max-width:1200px){
-  .hw{grid-template-columns:240px 1fr}
-  .assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);
-    transition:transform .2s;box-shadow:-20px 0 60px -20px #000}
-  .assist.open{transform:none}
-  .fab{display:grid}
-  .assist-close{display:grid!important}
-}
-@media(max-width:860px){
-  .hw{grid-template-columns:1fr}
-  .side{position:fixed;top:0;left:0;bottom:0;width:248px;transform:translateX(-105%);
-    transition:transform .2s;box-shadow:20px 0 60px -20px #000}
-  .side.open{transform:none}
-  .grid{grid-template-columns:1fr}
-  .span2,.hero,.stats{grid-column:span 1}
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .hero{flex-wrap:wrap}.count{margin-left:0}
-  .search{width:auto;flex:1}
-  .mobile-only{display:grid}
-  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:25;}
-}
-.assist-close{display:none;position:absolute;top:16px;right:16px}
-`;
+/* responsive */
+@media(max-width:1200px) { .hw{grid-template-columns:220px 1fr} .assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);transition:transform .2s;box-shadow:-20px 0 60px -20px rgba(0,0,0,0.5)} .assist.open{transform:none} .assist-close{display:grid!important} }
+@media(max-width:860px) { .hw{grid-template-columns:1fr} .side{position:fixed;top:0;left:0;bottom:0;width:248px;transform:translateX(-105%);transition:transform .2s;box-shadow:20px 0 60px -20px rgba(0,0,0,0.5)} .side.open{transform:none} .grid{grid-template-columns:1fr} .span2,.hero,.stats{grid-column:span 1} .stats{grid-template-columns:repeat(2,1fr)} .hero{flex-wrap:wrap}.count{margin-left:0} .search{width:auto;flex:1} .mobile-only{display:grid} .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25;} }
+.assist-close { display: none; position: absolute; top: 16px; right: 16px; }`;
 
 /* ---------------------------- Mascot SVG ---------------------------- */
 function Mascot({ size = 24 }) {
@@ -439,15 +379,15 @@ function AuthView({ onAuthSuccess }) {
   };
 
   return (
-    <div style={{ display: "grid", placeItems: "center", minHeight: "100vh", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 360 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 32, justifyContent: "center" }}>
-          <div style={{ width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "14px solid var(--text)" }}></div>
-          <div className="brand-name" style={{ fontSize: 24, color: "var(--text)" }}>Workspace</div>
+    <div className="auth-wrap">
+      
+        <div className="auth-header">
+          <div className="brand-mark">W</div>
+          <div className="auth-title">Workspace</div>
         </div>
         
-        <div className="card" style={{ maxWidth: 380, width: "100%", margin: "0 auto" }}>
-          <div className="card-b" style={{ padding: "32px 28px" }}>
+        <div className="auth-card">
+          <div>
             
             <div className="auth-tabs">
               <button 
@@ -493,11 +433,10 @@ function AuthView({ onAuthSuccess }) {
                 </div>
               )}
               
-              <button type="submit" disabled={loading} className="btn primary" style={{ width: "100%", padding: 12, marginTop: 12, justifyContent: "center", height: "auto" }}>
+              <button type="submit" disabled={loading} className="btn primary">
                 {loading ? "Please wait..." : mode === "login" ? "Log in to workspace" : "Create account"}
               </button>
             </form>
-          </div>
         </div>
       </div>
     </div>
@@ -583,7 +522,7 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <div style={{ display: "grid", placeItems: "center", height: "100vh", color: "var(--dim)", background: "var(--bg)" }}>Loading…</div>
+        <div style={{ display: "grid", placeItems: "center", height: "100vh", color: "var(--text-secondary)", background: "var(--bg)" }}>Loading…</div>
       </>
     );
   }
@@ -649,7 +588,7 @@ export default function App() {
       {navOpen && <div className="scrim mobile-only" onClick={() => setNavOpen(false)} />}
       <aside className={`side ${navOpen ? "open" : ""}`}>
         <div className="brand">
-          <div className="brand-mark"><Zap size={18} color="#fff" /></div>
+          <div className="brand-mark"><Zap size={18} color="currentColor" /></div>
           <div>
             <div className="brand-name hw-display">Workspace</div>
             <div className="brand-sub">{user.full_name.split(' ')[0]}'s command center</div>
@@ -668,7 +607,7 @@ export default function App() {
             <Initials name={user.full_name} className="avatar lg" />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 650, fontSize: 13, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.full_name}</div>
-              <div style={{ fontSize: 11, color: "var(--faint)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
+              <div style={{ fontSize: 11, color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
             </div>
           </div>
           <button 
@@ -695,7 +634,7 @@ export default function App() {
 
           <button className="icon-btn mobile-only" onClick={() => setNavOpen(true)}><Menu size={18} /></button>
           <div className="greet">
-            <h1 className="hw-display">{greeting}, {user.full_name.split(' ')[0]}</h1>
+            <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
             <p>{dateStr} · Here's everything across your workspace</p>
           </div>
           <div className="search">
@@ -708,9 +647,9 @@ export default function App() {
             style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px",
               borderRadius: 11, border: "1px solid var(--border)", background: "var(--inset)",
               fontSize: 12, fontWeight: 600, flex: "none",
-              color: mode === "live" ? "var(--green)" : mode === "loading" ? "var(--amber)" : "var(--faint)" }}>
+              color: mode === "live" ? "var(--success)" : mode === "loading" ? "var(--danger)" : "var(--text-muted)" }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%",
-              background: mode === "live" ? "var(--green)" : mode === "loading" ? "var(--amber)" : "var(--faint)" }}
+              background: mode === "live" ? "var(--success)" : mode === "loading" ? "var(--danger)" : "var(--text-muted)" }}
               className={mode === "live" ? "" : ""} />
             {/* {mode === "live" ? "Live" : mode === "loading" ? "Syncing" : "Demo"} */}
           </div>
@@ -770,10 +709,10 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
     <div className="grid">
       {/* hero countdown */}
       <div className="hero">
-        <div className="glyph"><Clock size={26} color="#fff" /></div>
+        <div className="glyph"><Clock size={26} color="currentColor" /></div>
         <div style={{ minWidth: 0 }}>
           <div className="eyebrow">Next up</div>
-          <h2 className="hw-display">{next ? next.title : "You're all clear"}</h2>
+          <h2>{next ? next.title : "You're all clear"}</h2>
           <div className="meta">
             {next && <span><Clock size={14} /> {fmtTime(next.start)}</span>}
             {next?.location && <span><Video size={14} /> {next.location}</span>}
@@ -803,13 +742,13 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
       <Card icon={SlackIcon} color="var(--slack)" title="Slack" sub="Mentions & messages"
         action={<a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open in Slack <ExternalLink size={12} /></a>}>
         {data.slack.mentions.slice(0, 3).map((m) => (
-          <div className="row" key={m.id}>
+          <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
             <Initials name={m.from} />
             <div className="body">
               <div className="top">
                 {m.unread && <span className="unread-dot" />}
                 <span className="name">{m.from}</span>
-                <span className="pill" style={{ background: "var(--inset)", color: "var(--faint)", border: "1px solid var(--border)" }}>{m.channel}</span>
+                <span className="pill" style={{ background: "var(--inset)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>{m.channel}</span>
                 <span className="time">{m.time}</span>
               </div>
               <div className="text">{m.text}</div>
@@ -822,17 +761,17 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
       <Card icon={Calendar} color="var(--gcal)" title="Today's schedule" sub={`${todayEvents.length} events`}
         action={<span className="link-btn" onClick={onNewEvent}><Plus size={13} /> New event</span>}>
         {todayEvents.map((e) => (
-          <div className="row" key={e.id} style={{ opacity: e.done ? 0.5 : 1 }}>
+          <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id} style={{ opacity: e.done ? 0.5 : 1 }}>
             <div style={{ textAlign: "center", flex: "none", width: 52 }}>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtTime(e.start)}</div>
-              <div style={{ fontSize: 10, color: "var(--faint)" }}>{e.done ? "done" : fmtTime(e.end)}</div>
+              <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{e.done ? "done" : fmtTime(e.end)}</div>
             </div>
             <div className="body">
               <div className="top">
                 <span className="name">{e.title}</span>
                 <span className={`pill ${PRIO[e.priority][1]}`} style={{ marginLeft: "auto" }}>{PRIO[e.priority][0]}</span>
               </div>
-              <div className="text" style={{ display: "flex", gap: 12, color: "var(--dim)" }}>
+              <div className="text" style={{ display: "flex", gap: 12, color: "var(--text-secondary)" }}>
                 {e.meet ? <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Video size={12} /> Google Meet</span>
                   : <span>{e.location}</span>}
               </div>
@@ -847,18 +786,18 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
           ? <a className="link-btn" href="https://github.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
           : <button type="button" className="link-btn" onClick={() => go("github")}>Connect <ArrowUpRight size={12} /></button>}>
         {data.github.length > 0 ? data.github.slice(0, 4).map((g) => (
-          <div className="row" key={g.id}>
+          <div className={`row ${(g.id).unread || (g.id).isUnread ? "unread" : ""}`} key={g.id}>
             <Initials name={g.actor} />
             <div className="body">
               <div className="top">
-                <span className="name"><b style={{ color: "#fff" }}>{g.actor}</b></span>
+                <span className="name"><b style={{ color: "var(--bg)" }}>{g.actor}</b></span>
                 <span className="time">{g.time} ago</span>
               </div>
               <div className="text">{g.action} to <b>{g.repo}</b> — {g.message}</div>
             </div>
           </div>
         )) : (
-          <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
+          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
             {ghConnected ? "No recent GitHub activity" : "Connect GitHub in Settings to see activity here"}
           </div>
         )}
@@ -870,7 +809,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
           ? <a className="link-btn" href="https://mail.google.com" target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>
           : <button type="button" className="link-btn" onClick={() => go("email")}>Connect <ArrowUpRight size={12} /></button>}>
         {data.email.length > 0 ? data.email.slice(0, 4).map((e) => (
-          <div className="row" key={e.id}>
+          <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id}>
             <Initials name={e.from} />
             <div className="body">
               <div className="top">
@@ -883,7 +822,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
             </div>
           </div>
         )) : (
-          <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
+          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
             {emailConnected ? "No new emails" : "Connect Gmail in Settings to see your inbox here"}
           </div>
         )}
@@ -895,11 +834,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
         <CalendlyLink link={data.calendly.link} />
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 4 }}>
           {data.calendly.booked.map((b) => (
-            <div className="row" key={b.id} style={{ alignItems: "flex-start" }}>
+            <div className={`row ${(b.id).unread || (b.id).isUnread ? "unread" : ""}`} key={b.id} style={{ alignItems: "flex-start" }}>
               <div className="body">
                 <div className="top"><span className="name">{b.name}</span></div>
                 <div className="text" style={{ WebkitLineClamp: 3 }}>
-                  with <b>{b.with}</b><br />{b.time}<br /><span style={{ color: "var(--faint)" }}>{b.type}</span>
+                  with <b>{b.with}</b><br />{b.time}<br /><span style={{ color: "var(--text-muted)" }}>{b.type}</span>
                 </div>
               </div>
             </div>
@@ -940,7 +879,7 @@ function CalendlyLink({ link }) {
         <Link2 size={15} color="var(--cly)" />
         <span className="url">{link}</span>
         <button className="btn" style={{ padding: "7px 11px" }} onClick={copy}>
-          {copied ? <><Check size={13} color="var(--green)" /> Copied</> : <><Copy size={13} /> Copy link</>}
+          {copied ? <><Check size={13} color="var(--success)" /> Copied</> : <><Copy size={13} /> Copy link</>}
         </button>
       </div>
     </div>
@@ -963,17 +902,17 @@ function CalendarView({ events, onNew }) {
         action={<button className="btn primary" onClick={onNew}><Plus size={15} /> New event</button>} />
       {Object.entries(groups).map(([day, evs]) => (
         <div key={day} style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--dim)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 12px" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 12px" }}>
             {new Date(day).toDateString() === new Date().toDateString() ? "Today · " : ""}
             {new Date(day).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
           </div>
           <div className="card"><div className="card-b">
             {evs.map((e) => (
-              <div className="row" key={e.id}>
+              <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id}>
                 <div style={{ width: 4, alignSelf: "stretch", borderRadius: 4, background: `var(--${e.priority === "high" ? "rose" : e.priority === "medium" ? "amber" : "green"})` }} />
                 <div style={{ textAlign: "center", width: 56, flex: "none" }}>
                   <div style={{ fontWeight: 700, fontSize: 13 }}>{fmtTime(e.start)}</div>
-                  <div style={{ fontSize: 10, color: "var(--faint)" }}>{fmtTime(e.end)}</div>
+                  <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{fmtTime(e.end)}</div>
                 </div>
                 <div className="body">
                   <div className="top"><span className="name" style={{ fontSize: 14 }}>{e.title}</span>
@@ -1003,11 +942,11 @@ function MessagesView({ slack }) {
       <div className="grid">
         <Card icon={AtSign} color="var(--slack)" title="Mentions" sub="People who tagged you">
           {slack.mentions.map((m) => (
-            <div className="row" key={m.id}>
+            <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
               <Initials name={m.from} />
               <div className="body">
                 <div className="top">{m.unread && <span className="unread-dot" />}<span className="name">{m.from}</span>
-                  <span className="pill" style={{ background: "var(--inset)", color: "var(--faint)", border: "1px solid var(--border)" }}>{m.channel}</span>
+                  <span className="pill" style={{ background: "var(--inset)", color: "var(--text-muted)", border: "1px solid var(--border)" }}>{m.channel}</span>
                   <span className="time">{m.time}</span></div>
                 <div className="text">{m.text}</div>
               </div>
@@ -1017,7 +956,7 @@ function MessagesView({ slack }) {
         </Card>
         <Card icon={MessageSquare} color="var(--blue)" title="Direct messages" sub="Recent conversations">
           {slack.dms.map((m) => (
-            <div className="row" key={m.id}>
+            <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
               <Initials name={m.from} />
               <div className="body">
                 <div className="top">{m.unread && <span className="unread-dot" />}<span className="name">{m.from}</span><span className="time">{m.time}</span></div>
@@ -1113,11 +1052,11 @@ function GithubView() {
   const renderList = (items, title, icon, emptyText, renderItem) => (
     <div style={{ marginBottom: 24 }}>
       <h3 style={{ fontSize: 14, fontWeight: 650, marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-        {icon} {title} <span style={{ fontSize: 11, color: "var(--dim)", fontWeight: 500, background: "var(--inset)", padding: "2px 6px", borderRadius: 10 }}>{items?.length || 0}</span>
+        {icon} {title} <span style={{ fontSize: 11, color: "var(--text-secondary)", fontWeight: 500, background: "var(--inset)", padding: "2px 6px", borderRadius: 10 }}>{items?.length || 0}</span>
       </h3>
       <div className="card"><div className="card-b" style={{ padding: items?.length ? "8px" : "16px 20px" }}>
         {items && items.length > 0 ? items.map(renderItem) : (
-          <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>{emptyText}</div>
+          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>{emptyText}</div>
         )}
       </div></div>
     </div>
@@ -1128,23 +1067,23 @@ function GithubView() {
       <ViewHead title="GitHub" sub="Notifications, PRs, Issues & Activity"
         action={
           status === "connected" ? (
-            <button className="link-btn" onClick={disconnect} style={{ color: "var(--faint)", background: "transparent", border: "none" }}>Disconnect</button>
+            <button className="link-btn" onClick={disconnect} style={{ color: "var(--text-muted)", background: "transparent", border: "none" }}>Disconnect</button>
           ) : status === "disconnected" ? (
             <button className="btn primary" onClick={connect}><Github size={14} /> Connect GitHub</button>
           ) : null
         } />
       
-      {status === "loading" && <div style={{ color: "var(--dim)", fontSize: 14, padding: "20px 0" }}>Loading...</div>}
+      {status === "loading" && <div style={{ color: "var(--text-secondary)", fontSize: 14, padding: "20px 0" }}>Loading...</div>}
       
-      {status === "rate_limited" && <div style={{ color: "var(--amber)", fontSize: 14, padding: "16px 20px", background: "rgba(245,181,68,0.1)", border: "1px solid rgba(245,181,68,0.2)", borderRadius: 12, marginBottom: 20 }}>GitHub rate limit reached, try again later.</div>}
+      {status === "rate_limited" && <div style={{ color: "var(--danger)", fontSize: 14, padding: "16px 20px", background: "rgba(245,181,68,0.1)", border: "1px solid rgba(245,181,68,0.2)", borderRadius: 12, marginBottom: 20 }}>GitHub rate limit reached, try again later.</div>}
       
       {status === "error" && <div style={{ color: "var(--rose)", fontSize: 14, padding: "16px 20px", background: "rgba(255,107,138,0.1)", border: "1px solid rgba(255,107,138,0.2)", borderRadius: 12, marginBottom: 20 }}>An error occurred while fetching GitHub data.</div>}
       
       {status === "disconnected" && (
         <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--card)", borderRadius: "var(--radius)", border: "1px solid var(--border-soft)", marginTop: 20 }}>
-          <Github size={48} color="var(--faint)" style={{ margin: "0 auto 16px" }} />
+          <Github size={48} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Connect your GitHub</h2>
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your notifications, review requests, assigned issues, and recent activity right from your dashboard.</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your notifications, review requests, assigned issues, and recent activity right from your dashboard.</p>
           <button className="btn primary" onClick={connect}><Github size={14} /> Connect GitHub</button>
         </div>
       )}
@@ -1152,29 +1091,29 @@ function GithubView() {
       {status === "connected" && data && (
         <div className="grid" style={{ marginTop: 20 }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {renderList(data.notifications, "Notifications", <Bell size={15} color="var(--amber)" />, "No new notifications", (n) => (
-              <a href={n.url} target="_blank" rel="noreferrer" className="row" key={n.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
+            {renderList(data.notifications, "Notifications", <Bell size={15} color="var(--danger)" />, "No new notifications", (n) => (
+              <a href={n.url} target="_blank" rel="noreferrer" className={`row ${(n.id).unread || (n.id).isUnread ? "unread" : ""}`} key={n.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
                 <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
-                  <Bell size={15} color="var(--amber)" />
+                  <Bell size={15} color="var(--danger)" />
                 </div>
                 <div className="body">
                   <div className="top">
                     {n.unread && <span className="unread-dot" />}
-                    <span className="name"><b style={{ color: "#fff" }}>{n.repo}</b></span>
+                    <span className="name"><b style={{ color: "var(--bg)" }}>{n.repo}</b></span>
                     <span className="time">{timeAgo(n.updated_at)}</span>
                   </div>
-                  <div className="text">{n.title} <span style={{ color: "var(--faint)" }}>({n.reason})</span></div>
+                  <div className="text">{n.title} <span style={{ color: "var(--text-muted)" }}>({n.reason})</span></div>
                 </div>
               </a>
             ))}
             
             {renderList(data.pull_requests, "Pull requests awaiting review", <GitCommit size={15} color="var(--teal)" />, "No PRs waiting for your review", (pr) => (
-              <a href={pr.url} target="_blank" rel="noreferrer" className="row" key={pr.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
+              <a href={pr.url} target="_blank" rel="noreferrer" className={`row ${(pr.id).unread || (pr.id).isUnread ? "unread" : ""}`} key={pr.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
                 <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
                   <GitCommit size={15} color="var(--teal)" />
                 </div>
                 <div className="body">
-                  <div className="top"><span className="name"><b style={{ color: "#fff" }}>{pr.repo}</b></span><span className="time">{timeAgo(pr.updated_at)}</span></div>
+                  <div className="top"><span className="name"><b style={{ color: "var(--bg)" }}>{pr.repo}</b></span><span className="time">{timeAgo(pr.updated_at)}</span></div>
                   <div className="text">{pr.title}</div>
                 </div>
               </a>
@@ -1183,24 +1122,24 @@ function GithubView() {
           
           <div style={{ display: "flex", flexDirection: "column" }}>
             {renderList(data.assigned_issues, "Assigned issues", <CheckCircle2 size={15} color="var(--rose)" />, "No open issues assigned to you", (iss) => (
-              <a href={iss.url} target="_blank" rel="noreferrer" className="row" key={iss.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
+              <a href={iss.url} target="_blank" rel="noreferrer" className={`row ${(iss.id).unread || (iss.id).isUnread ? "unread" : ""}`} key={iss.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
                 <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
                   <CheckCircle2 size={15} color="var(--rose)" />
                 </div>
                 <div className="body">
-                  <div className="top"><span className="name"><b style={{ color: "#fff" }}>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
+                  <div className="top"><span className="name"><b style={{ color: "var(--bg)" }}>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
                   <div className="text">{iss.title}</div>
                 </div>
               </a>
             ))}
 
             {renderList(data.recent_activity, "Recent activity", <Github size={15} color="var(--gh)" />, "No recent activity", (act, i) => (
-              <div className="row" key={i} style={{ display: "flex" }}>
+              <div className={`row ${(i).unread || (i).isUnread ? "unread" : ""}`} key={i} style={{ display: "flex" }}>
                 <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
                   <Github size={15} color="var(--gh)" />
                 </div>
                 <div className="body">
-                  <div className="top"><span className="name"><b style={{ color: "#fff" }}>{act.repo}</b></span><span className="time">{timeAgo(act.created_at)}</span></div>
+                  <div className="top"><span className="name"><b style={{ color: "var(--bg)" }}>{act.repo}</b></span><span className="time">{timeAgo(act.created_at)}</span></div>
                   <div className="text">{act.summary}</div>
                 </div>
               </div>
@@ -1296,21 +1235,21 @@ function EmailView() {
       <ViewHead title="Inbox" sub={emailAddress ? `Connected as ${emailAddress}` : "Recent emails"}
         action={
           status === "connected" ? (
-            <button className="link-btn" onClick={disconnect} style={{ color: "var(--faint)", background: "transparent", border: "none" }}>Disconnect</button>
+            <button className="link-btn" onClick={disconnect} style={{ color: "var(--text-muted)", background: "transparent", border: "none" }}>Disconnect</button>
           ) : status === "disconnected" ? (
             <button className="btn primary" onClick={connect}><Mail size={14} /> Connect Gmail</button>
           ) : null
         } />
       
-      {status === "loading" && <div style={{ color: "var(--dim)", fontSize: 14, padding: "20px 0" }}>Loading...</div>}
+      {status === "loading" && <div style={{ color: "var(--text-secondary)", fontSize: 14, padding: "20px 0" }}>Loading...</div>}
       
       {status === "error" && <div style={{ color: "var(--rose)", fontSize: 14, padding: "16px 20px", background: "rgba(255,107,138,0.1)", border: "1px solid rgba(255,107,138,0.2)", borderRadius: 12, marginBottom: 20 }}>An error occurred while fetching emails.</div>}
       
       {status === "disconnected" && (
         <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--card)", borderRadius: "var(--radius)", border: "1px solid var(--border-soft)", marginTop: 20 }}>
-          <Mail size={48} color="var(--faint)" style={{ margin: "0 auto 16px" }} />
+          <Mail size={48} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Connect your Gmail</h2>
-          <p style={{ color: "var(--dim)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your recent inbox messages directly on your dashboard.</p>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your recent inbox messages directly on your dashboard.</p>
           <button className="btn primary" onClick={connect}><Mail size={14} /> Connect Gmail</button>
         </div>
       )}
@@ -1318,7 +1257,7 @@ function EmailView() {
       {status === "connected" && data && (
         <div className="card" style={{ marginTop: 20 }}><div className="card-b" style={{ padding: data.messages?.length ? "8px" : "16px 20px" }}>
           {data.messages && data.messages.length > 0 ? data.messages.map((e) => (
-            <div className="row" key={e.id}>
+            <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id}>
               <Initials name={e.sender} />
               <div className="body">
                 <div className="top">
@@ -1326,7 +1265,7 @@ function EmailView() {
                   <span className="name" style={{ color: e.unread ? "#fff" : "inherit" }}>{e.sender}</span>
                   <span className="time">{timeAgo(e.received_at)}</span>
                 </div>
-                <div className="text" style={{ color: e.unread ? "var(--text)" : "var(--dim)" }}>
+                <div className="text" style={{ color: e.unread ? "var(--text)" : "var(--text-secondary)" }}>
                   <b style={{ color: e.unread ? "#fff" : "inherit" }}>{e.subject}</b> — {e.snippet}
                 </div>
               </div>
@@ -1335,7 +1274,7 @@ function EmailView() {
               </div>
             </div>
           )) : (
-            <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No new emails</div>
+            <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No new emails</div>
           )}
         </div></div>
       )}
@@ -1351,7 +1290,7 @@ function SettingsView({ integrations, mode, onConnect }) {
   return (
     <div>
       <ViewHead title="Settings" sub="Manage your connected tools & workspace" />
-      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--dim)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Integrations</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Integrations</div>
       <div style={{ display: "grid", gap: 12 }}>
         {integrations.map((it) => {
           const Ic = intIcon[it.id]; const on = conn[it.id];
@@ -1367,7 +1306,7 @@ function SettingsView({ integrations, mode, onConnect }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 650, fontSize: 14 }}>{it.name}</div>
-                <div style={{ fontSize: 12, color: "var(--dim)" }}>{it.desc}{live && it.id === "cly" ? " · token" : ""}{live && it.id === "slack" ? " · token" : ""}</div>
+                <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.desc}{live && it.id === "cly" ? " · token" : ""}{live && it.id === "slack" ? " · token" : ""}</div>
               </div>
               {on
                 ? <button className="btn connected" onClick={() => !live && setConn((p) => ({ ...p, [it.id]: false }))}><CheckCircle2 size={15} /> Connected</button>
@@ -1385,7 +1324,7 @@ function ViewHead({ title, sub, action }) {
     <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginBottom: 20 }}>
       <div>
         <h2 className="hw-display" style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-.5px" }}>{title}</h2>
-        <p style={{ color: "var(--dim)", fontSize: 13, marginTop: 4 }}>{sub}</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: 13, marginTop: 4 }}>{sub}</p>
       </div>
       {action && <div style={{ marginLeft: "auto" }}>{action}</div>}
     </div>
@@ -1538,20 +1477,20 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
               <Mascot size={52} />
               <div>
                 <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {user.full_name.split(' ')[0]}</h2>
-                <p style={{ color: "var(--dim)", fontSize: 13.5, marginTop: 4 }}>Let's set up your command center.</p>
+                <p style={{ color: "var(--text-secondary)", fontSize: 13.5, marginTop: 4 }}>Let's set up your command center.</p>
               </div>
             </div>
           </>}
           {step === 1 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Connect your tools</h2>}
           {step === 2 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Grant permissions</h2>}
           {step === 3 && <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <div className="brand-mark" style={{ width: 48, height: 48, borderRadius: 14 }}><Check size={24} color="#fff" /></div>
+            <div className="brand-mark" style={{ width: 48, height: 48, borderRadius: 14 }}><Check size={24} color="currentColor" /></div>
             <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>You're all set!</h2>
           </div>}
         </div>
 
         <div className="sheet-b">
-          {step === 0 && <p style={{ color: "var(--dim)", fontSize: 14, lineHeight: 1.6 }}>
+          {step === 0 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
             Stop tab-hopping between Slack, Calendar, Calendly, GitHub and email. Connect them once and get a single, intelligent overview — plus an AI assistant that summarizes your whole day in seconds.
           </p>}
 
@@ -1562,7 +1501,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
               return (
                 <div className="conn-card" key={it.id} style={{ padding: 13 }}>
                   <div className="conn-ic" style={{ width: 38, height: 38, background: `color-mix(in srgb, ${it.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${it.color} 30%, transparent)` }}><Ic size={18} color={it.color} /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 13.5 }}>{it.name}</div><div style={{ fontSize: 11.5, color: "var(--dim)" }}>{it.desc}</div></div>
+                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 13.5 }}>{it.name}</div><div style={{ fontSize: 11.5, color: "var(--text-secondary)" }}>{it.desc}</div></div>
                   <button className={on ? "btn connected" : "btn primary"} style={{ padding: "7px 13px", fontSize: 12.5 }}
                     onClick={() => { if (mode === "live" && isOauth) { onConnect(it.id); return; } setConn((p) => ({ ...p, [it.id]: !on })); }}>
                     {on ? <><Check size={13} /> Connected</> : "Connect"}
@@ -1575,13 +1514,13 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 2 && <div style={{ display: "grid", gap: 10 }}>
             {["Read your messages & mentions", "View calendar & create events", "Read repository activity", "Read your inbox & flag important mail"].map((p, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 11, fontSize: 13 }}>
-                <CheckCircle2 size={17} color="var(--green)" /> {p}
+                <CheckCircle2 size={17} color="var(--success)" /> {p}
               </div>
             ))}
-            <p style={{ fontSize: 11.5, color: "var(--faint)", marginTop: 2 }}>You can revoke access anytime from Settings. We never post on your behalf.</p>
+            <p style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>You can revoke access anytime from Settings. We never post on your behalf.</p>
           </div>}
 
-          {step === 3 && <p style={{ color: "var(--dim)", fontSize: 14, lineHeight: 1.6 }}>
+          {step === 3 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
             {connectedCount > 0 ? `${connectedCount} ${connectedCount === 1 ? "tool" : "tools"} connected. ` : ""}
             Your dashboard is ready. Your assistant is standing by on the right — try asking <b style={{ color: "var(--text)" }}>"What's happening today?"</b>
           </p>}
@@ -1635,7 +1574,7 @@ function NewEventModal({ onClose, onAdd }) {
               <option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
             </select>
           </div>
-          <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "var(--dim)", cursor: "pointer" }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "var(--text-secondary)", cursor: "pointer" }}>
             <input type="checkbox" checked={meet} onChange={(e) => setMeet(e.target.checked)} style={{ width: 16, height: 16, accentColor: "var(--primary)" }} />
             <Video size={15} /> Add a Google Meet link
           </label>
