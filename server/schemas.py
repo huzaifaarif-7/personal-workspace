@@ -1,21 +1,21 @@
 """Pydantic models shared across routers (request + response shapes)."""
 from datetime import datetime
 from typing import Literal, Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 Priority = Literal["high", "medium", "low"]
 
 
 # ---------- Auth ----------
 class SignupRequest(BaseModel):
-    name: str
+    name: str = Field(..., max_length=100)
     email: EmailStr
-    password: str
+    password: str = Field(..., max_length=128)
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., max_length=128)
 
 
 class TokenResponse(BaseModel):
@@ -26,16 +26,16 @@ class TokenResponse(BaseModel):
 
 class UserPublic(BaseModel):
     id: str
-    name: str
+    name: str = Field(..., max_length=100)
     email: EmailStr
 
 
 # ---------- Integrations ----------
 class Integration(BaseModel):
     id: str
-    name: str
+    name: str = Field(..., max_length=100)
     connected: bool
-    description: str
+    description: str = Field(..., max_length=500)
     last_sync: Optional[datetime] = None
 
 
@@ -47,9 +47,9 @@ class ConnectRequest(BaseModel):
 # ---------- Slack ----------
 class SlackMessage(BaseModel):
     id: str
-    sender: str
-    channel: Optional[str] = None
-    text: str
+    sender: str = Field(..., max_length=100)
+    channel: Optional[str] = Field(None, max_length=100)
+    text: str = Field(..., max_length=2000)
     timestamp: datetime
     unread: bool = False
     kind: Literal["mention", "dm"]
@@ -58,17 +58,17 @@ class SlackMessage(BaseModel):
 # ---------- Calendar ----------
 class CalendarEvent(BaseModel):
     id: str
-    title: str
+    title: str = Field(..., max_length=200)
     start: datetime
     end: datetime
     priority: Priority = "medium"
-    location: Optional[str] = None
+    location: Optional[str] = Field(None, max_length=200)
     attendees: int = 0
-    meet_link: Optional[str] = None
+    meet_link: Optional[str] = Field(None, max_length=500)
 
 
 class CreateEventRequest(BaseModel):
-    title: str
+    title: str = Field(..., max_length=200)
     start: datetime
     end: datetime
     priority: Priority = "medium"
@@ -78,10 +78,10 @@ class CreateEventRequest(BaseModel):
 # ---------- Calendly ----------
 class CalendlyBooking(BaseModel):
     id: str
-    name: str
-    invitee: str
-    when: str
-    duration: str
+    name: str = Field(..., max_length=100)
+    invitee: str = Field(..., max_length=100)
+    when: str = Field(..., max_length=100)
+    duration: str = Field(..., max_length=50)
 
 
 class CalendlyOverview(BaseModel):
@@ -93,10 +93,10 @@ class CalendlyOverview(BaseModel):
 # ---------- GitHub ----------
 class GithubActivity(BaseModel):
     id: str
-    actor: str
-    action: str
-    repo: str
-    message: str
+    actor: str = Field(..., max_length=100)
+    action: str = Field(..., max_length=100)
+    repo: str = Field(..., max_length=200)
+    message: str = Field(..., max_length=1000)
     commits: int
     timestamp: datetime
 
@@ -104,9 +104,9 @@ class GithubActivity(BaseModel):
 # ---------- Email ----------
 class EmailMessage(BaseModel):
     id: str
-    sender: str
-    subject: str
-    preview: str
+    sender: str = Field(..., max_length=100)
+    subject: str = Field(..., max_length=300)
+    preview: str = Field(..., max_length=500)
     timestamp: datetime
     unread: bool
     important: bool
@@ -115,16 +115,16 @@ class EmailMessage(BaseModel):
 # ---------- Assistant ----------
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant"]
-    content: str
+    content: str = Field(..., max_length=4000)
 
 
 class AssistantQuery(BaseModel):
-    message: str
+    message: str = Field(..., max_length=1000)
     history: list[ChatMessage] = []
 
 
 class AssistantReply(BaseModel):
-    reply: str
+    reply: str = Field(..., max_length=4000)
     source: Literal["anthropic", "local"]
 
 
