@@ -40,9 +40,12 @@ class Settings(BaseSettings):
     google_callback_url: str = "http://localhost:8000/api/auth/google/callback"
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
 
-    # Calendly + Slack (static personal tokens)
+    # Calendly + Slack (static personal tokens + new OAuth fields)
     calendly_token: str | None = None
     slack_user_token: str | None = None
+    slack_client_id: str | None = None
+    slack_client_secret: str | None = None
+    slack_redirect_uri: str = "http://localhost:8000/api/auth/slack/callback"
 
     # Optional persistent token store (recommended on serverless / Vercel).
     # Upstash Redis REST — works over plain HTTPS, no redis client needed.

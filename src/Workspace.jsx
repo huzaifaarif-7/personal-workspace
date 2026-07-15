@@ -549,7 +549,7 @@ export default function App() {
 
 
   const liveConnect = (internalId) => {
-    const path = { gh: "github", gcal: "google", email: "google" }[internalId];
+    const path = { gh: "github", gcal: "google", email: "google", slack: "slack" }[internalId];
     if (path && API_BASE) window.location.href = `${API_BASE}/auth/${path}/login`;
   };
 
@@ -666,7 +666,7 @@ export default function App() {
           {view === "dashboard" && <Dashboard data={data} events={events} todayEvents={todayEvents}
             unreadSlack={unreadSlack} unreadEmail={unreadEmail} onNewEvent={() => setNewEvent(true)} go={go} />}
           {view === "calendar" && <CalendarView events={events} onNew={() => setNewEvent(true)} />}
-          {view === "messages" && <MessagesView slack={data.slack} />}
+          {view === "messages" && <MessagesView slack={data.slack} slackConnected={data.integrations.find((i) => i.id === "slack")?.connected} onConnect={liveConnect} />}
           {view === "github" && <GithubView github={data.github} />}
           {view === "email" && <EmailView email={data.email} />}
           {view === "settings" && <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} />}
@@ -703,6 +703,7 @@ export default function App() {
 /* ---------------------------- Dashboard ---------------------------- */
 function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go }) {
   const { next, text } = useCountdown(events);
+  const slackConnected = data.integrations.find((i) => i.id === "slack")?.connected;
   const ghConnected = data.integrations.find((i) => i.id === "gh")?.connected;
   const emailConnected = data.integrations.find((i) => i.id === "email")?.connected;
   const stats = [
@@ -745,9 +746,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
       </div>
 
       {/* Slack */}
-      <Card icon={SlackIcon} color="var(--slack)" title="Slack" sub="Mentions & messages"
-        action={<a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open in Slack <ExternalLink size={12} /></a>}>
-        {data.slack.mentions.slice(0, 3).map((m) => (
+      <Card icon={SlackIcon} color="var(--slack)" title="Slack" sub={slackConnected ? "Mentions & messages" : "Not connected"}
+        action={slackConnected
+          ? <a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open in Slack <ExternalLink size={12} /></a>
+          : <button type="button" className="link-btn" onClick={() => go("messages")}>Connect <ArrowUpRight size={12} /></button>}>
+        {slackConnected && data.slack.mentions && data.slack.mentions.length > 0 ? data.slack.mentions.slice(0, 3).map((m) => (
           <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
             <Initials name={m.from} />
             <div className="body">
@@ -760,7 +763,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
               <div className="text">{m.text}</div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
+            {slackConnected ? "No recent Slack mentions" : "Connect Slack in Settings to see your mentions here"}
+          </div>
+        )}
       </Card>
 
       {/* Calendar */}
@@ -940,14 +947,29 @@ function CalendarView({ events, onNew }) {
 }
 
 /* ---------------------------- Messages (Slack) ---------------------------- */
-function MessagesView({ slack }) {
+function MessagesView({ slack, slackConnected, onConnect }) {
+  if (!slackConnected) {
+    return (
+      <div>
+        <ViewHead title="Messages" sub="Slack mentions & direct messages" />
+        <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--card)", borderRadius: "var(--radius)", border: "1px solid var(--border)", marginTop: 20 }}>
+          <SlackIcon size={48} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
+          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "var(--text)" }}>Connect your Slack</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: 14, marginBottom: 24, maxWidth: 400, margin: "0 auto" }}>View your recent mentions and direct messages directly on your dashboard.</p>
+          <button className="btn" style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)", width: "auto", margin: "0 auto" }} onClick={() => onConnect("slack")}><SlackIcon size={14} /> Connect Slack</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <ViewHead title="Messages" sub="Slack mentions & direct messages"
         action={<a className="btn primary" href="https://slack.com" target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open in Slack</a>} />
       <div className="grid">
-        <Card icon={AtSign} color="var(--slack)" title="Mentions" sub="People who tagged you">
-          {slack.mentions.map((m) => (
+        <Card icon={AtSign} color="var(--slack)" title="Mentions" sub="People who tagged you"
+          action={<a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>}>
+          {slack.mentions && slack.mentions.length > 0 ? slack.mentions.map((m) => (
             <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
               <Initials name={m.from} />
               <div className="body">
@@ -958,10 +980,12 @@ function MessagesView({ slack }) {
               </div>
               <a className="link-btn" style={{ alignSelf: "center" }} href="https://slack.com" target="_blank" rel="noreferrer">Reply <ArrowUpRight size={12} /></a>
             </div>
-          ))}
+          )) : (
+            <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No mentions</div>
+          )}
         </Card>
         <Card icon={MessageSquare} color="var(--blue)" title="Direct messages" sub="Recent conversations">
-          {slack.dms.map((m) => (
+          {slack.dms && slack.dms.length > 0 ? slack.dms.map((m) => (
             <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
               <Initials name={m.from} />
               <div className="body">
@@ -970,7 +994,9 @@ function MessagesView({ slack }) {
               </div>
               <a className="link-btn" style={{ alignSelf: "center" }} href="https://slack.com" target="_blank" rel="noreferrer">Open <ArrowUpRight size={12} /></a>
             </div>
-          ))}
+          )) : (
+            <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No direct messages</div>
+          )}
         </Card>
       </div>
     </div>
@@ -1292,7 +1318,23 @@ function EmailView() {
 function SettingsView({ integrations, mode, onConnect }) {
   const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, i.connected])));
   const live = mode === "live";
-  const oauthIds = ["gh", "gcal", "email"];   // these connect via browser OAuth
+  const oauthIds = ["gh", "gcal", "email", "slack"];   // these connect via browser OAuth
+
+  const handleDisconnect = (itId) => {
+    if (!live) {
+      setConn((p) => ({ ...p, [itId]: false }));
+      return;
+    }
+    const path = { gh: "github", gcal: "google", email: "google", slack: "slack" }[itId];
+    if (path && API_BASE) {
+      fetch(`${API_BASE}/auth/${path}/disconnect`, { method: "POST", credentials: "include" })
+        .then(() => setConn((p) => ({ ...p, [itId]: false })))
+        .catch(() => {});
+    } else {
+      setConn((p) => ({ ...p, [itId]: false }));
+    }
+  };
+
   return (
     <div>
       <ViewHead title="Settings" sub="Manage your connected tools & workspace" />
@@ -1315,7 +1357,7 @@ function SettingsView({ integrations, mode, onConnect }) {
                 <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.desc}{live && it.id === "cly" ? " · token" : ""}{live && it.id === "slack" ? " · token" : ""}</div>
               </div>
               {on
-                ? <button className="btn connected" onClick={() => !live && setConn((p) => ({ ...p, [it.id]: false }))}><CheckCircle2 size={15} /> Connected</button>
+                ? <button className="btn connected" onClick={() => handleDisconnect(it.id)}><CheckCircle2 size={15} /> Connected</button>
                 : <button className="btn primary" onClick={handleConnect}>{live && isOauth ? "Connect" : "Connect"}</button>}
             </div>
           );
@@ -1503,7 +1545,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 1 && <div style={{ display: "grid", gap: 10 }}>
             {integrations.map((it) => {
               const Ic = intIcon[it.id]; const on = conn[it.id] || (mode === "live" && it.connected);
-              const isOauth = ["gh", "gcal", "email"].includes(it.id);
+              const isOauth = ["gh", "gcal", "email", "slack"].includes(it.id);
               return (
                 <div className="conn-card" key={it.id} style={{ padding: 13 }}>
                   <div className="conn-ic" style={{ width: 38, height: 38, background: `color-mix(in srgb, ${it.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${it.color} 30%, transparent)` }}><Ic size={18} color={it.color} /></div>

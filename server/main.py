@@ -24,6 +24,10 @@ from .google_routes import (                              # new Google OAuth + d
     auth_router as go_auth_router,
     google_router as go_google_router,
 )
+from .slack_routes import (
+    auth_router as slack_auth_router,
+    slack_router,
+)
 from .auth_routes import (                                # new User Auth routes
     auth_router as local_auth_router,
     user_router as local_user_router,
@@ -123,6 +127,10 @@ app.include_router(go_google_router, prefix=settings.api_prefix)
 # User Auth routes
 app.include_router(local_auth_router, prefix=settings.api_prefix)
 app.include_router(local_user_router, prefix=settings.api_prefix)
+
+# Slack OAuth + data routes
+app.include_router(slack_auth_router, prefix=settings.api_prefix)
+app.include_router(slack_router, prefix=settings.api_prefix)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
