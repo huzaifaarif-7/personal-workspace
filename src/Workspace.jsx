@@ -666,7 +666,11 @@ export default function App() {
           {view === "dashboard" && <Dashboard data={data} events={events} todayEvents={todayEvents}
             unreadSlack={unreadSlack} unreadEmail={unreadEmail} onNewEvent={() => setNewEvent(true)} go={go} />}
           {view === "calendar" && <CalendarView events={events} onNew={() => setNewEvent(true)} />}
-          {view === "messages" && <MessagesView slack={data.slack} slackConnected={data.integrations.find((i) => i.id === "slack")?.connected} onConnect={liveConnect} />}
+          {view === "messages" && <MessagesView slack={data.slack} slackConnected={data.integrations.find((i) => i.id === "slack")?.connected} onConnect={liveConnect} onDisconnect={() => {
+            if (API_BASE && mode === "live") {
+              fetch(`${API_BASE}/auth/slack/disconnect`, { method: "POST", credentials: "include" }).then(() => window.location.reload());
+            }
+          }} />}
           {view === "github" && <GithubView github={data.github} />}
           {view === "email" && <EmailView email={data.email} />}
           {view === "settings" && <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} />}
@@ -947,7 +951,7 @@ function CalendarView({ events, onNew }) {
 }
 
 /* ---------------------------- Messages (Slack) ---------------------------- */
-function MessagesView({ slack, slackConnected, onConnect }) {
+function MessagesView({ slack, slackConnected, onConnect, onDisconnect }) {
   if (!slackConnected) {
     return (
       <div>
@@ -965,7 +969,12 @@ function MessagesView({ slack, slackConnected, onConnect }) {
   return (
     <div>
       <ViewHead title="Messages" sub="Slack mentions & direct messages"
-        action={<a className="btn primary" href="https://slack.com" target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open in Slack</a>} />
+        action={
+          <div style={{ display: "flex", gap: 10 }}>
+            <button className="btn" style={{ color: "var(--danger)", borderColor: "var(--border)" }} onClick={onDisconnect}>Disconnect</button>
+            <a className="btn primary" href="https://slack.com" target="_blank" rel="noreferrer"><ExternalLink size={14} /> Open in Slack</a>
+          </div>
+        } />
       <div className="grid">
         <Card icon={AtSign} color="var(--slack)" title="Mentions" sub="People who tagged you"
           action={<a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>}>

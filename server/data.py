@@ -41,7 +41,7 @@ def status_for_user(db: Session, user_id: int) -> dict[str, bool]:
     em = db.query(EmailConnection).filter(EmailConnection.user_id == user_id).first()
     sl = db.query(SlackConnection).filter(SlackConnection.user_id == user_id).first()
     return {
-        "slack": sl is not None or bool(settings.slack_user_token),
+        "slack": sl is not None,
         "gcal": store.has("google"),
         "calendly": bool(settings.calendly_token),
         "github": gh is not None,
@@ -64,8 +64,6 @@ def slack_messages_for_user(db: Session, user_id: int) -> list[schemas.SlackMess
     token = None
     if conn:
         token = decrypt_token(conn.access_token_encrypted)
-    elif settings.slack_user_token:
-        token = settings.slack_user_token
         
     if not token:
         return mock_data.slack_messages()

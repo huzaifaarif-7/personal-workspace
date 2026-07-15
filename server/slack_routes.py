@@ -158,5 +158,5 @@ def slack_status(
         .first()
     )
     return {
-        "connected": conn is not None or bool(settings.slack_user_token),
+        "connected": conn is not None,
     }
