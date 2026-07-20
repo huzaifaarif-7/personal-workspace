@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
   Video, Link2, ChevronRight, X, Menu, AtSign, GitCommit, Star,
-  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Zap, Bell, Sun, Moon
+  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Zap, Bell, Sun, Moon, Palette
 } from "lucide-react";
 
 const Logo = ({ size = 28 }) => (
@@ -19,6 +19,8 @@ const Logo = ({ size = 28 }) => (
 
 const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+
 :root {
   --bg: #0a0a0a;
   --surface: #111111;
@@ -33,6 +35,19 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@40
   --danger: #f87171;
   --success: #4ade80;
   --radius: 8px;
+  --slack: #e01e5a;
+  --gcal: #4285f4;
+  --cly: #0069ff;
+  --gh: #adbac7;
+  --email: #ea4335;
+  --teal: #14b8a6;
+  --blue: #3b82f6;
+  --rose: #f43f5e;
+  --amber: #f59e0b;
+  --green: #22c55e;
+  --inset: rgba(255,255,255,0.04);
+  --border-soft: #222222;
+  --primary-2: #818cf8;
 }
 :root[data-theme="light"] {
   --bg: #fafafa;
@@ -47,6 +62,111 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@40
   --primary-bg: rgba(37, 99, 235, 0.06);
   --danger: #dc2626;
   --success: #16a34a;
+  --inset: rgba(0,0,0,0.04);
+  --border-soft: #e5e5e5;
+  --gh: #24292f;
+}
+:root[data-theme="midnight"] {
+  --bg: #060d1a;
+  --surface: #0c1829;
+  --card: #102030;
+  --border: #1c3050;
+  --border-strong: #254070;
+  --text: #e8f0fe;
+  --text-secondary: #7a9cc8;
+  --text-muted: #3d5a80;
+  --primary: #4f8ef7;
+  --primary-bg: rgba(79, 142, 247, 0.14);
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 8px;
+  --inset: rgba(255,255,255,0.04);
+  --border-soft: #1c3050;
+}
+:root[data-theme="forest"] {
+  --bg: #050e08;
+  --surface: #0a1a0f;
+  --card: #0f2318;
+  --border: #1a3d27;
+  --border-strong: #235235;
+  --text: #e2f5e8;
+  --text-secondary: #6ea87f;
+  --text-muted: #2d5c3a;
+  --primary: #22c55e;
+  --primary-bg: rgba(34, 197, 94, 0.12);
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 8px;
+  --inset: rgba(255,255,255,0.04);
+  --border-soft: #1a3d27;
+}
+:root[data-theme="sunset"] {
+  --bg: #0f0805;
+  --surface: #1a110a;
+  --card: #221810;
+  --border: #3d2a1a;
+  --border-strong: #5c3f26;
+  --text: #fef3ec;
+  --text-secondary: #c8936a;
+  --text-muted: #7a4a28;
+  --primary: #f97316;
+  --primary-bg: rgba(249, 115, 22, 0.12);
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 8px;
+  --inset: rgba(255,255,255,0.04);
+  --border-soft: #3d2a1a;
+}
+:root[data-theme="aurora"] {
+  --bg: #07050f;
+  --surface: #100d1f;
+  --card: #16122a;
+  --border: #261d3f;
+  --border-strong: #362a58;
+  --text: #ede9fe;
+  --text-secondary: #9070cc;
+  --text-muted: #4a3580;
+  --primary: #8b5cf6;
+  --primary-bg: rgba(139, 92, 246, 0.14);
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 8px;
+  --inset: rgba(255,255,255,0.04);
+  --border-soft: #261d3f;
+}
+:root[data-theme="rose"] {
+  --bg: #0f050a;
+  --surface: #1a0a12;
+  --card: #220f18;
+  --border: #3d1a2a;
+  --border-strong: #5c2640;
+  --text: #fce7f3;
+  --text-secondary: #c870a0;
+  --text-muted: #7a2a4a;
+  --primary: #ec4899;
+  --primary-bg: rgba(236, 72, 153, 0.14);
+  --danger: #f87171;
+  --success: #4ade80;
+  --radius: 8px;
+  --inset: rgba(255,255,255,0.04);
+  --border-soft: #3d1a2a;
+}
+:root[data-theme="nord"] {
+  --bg: #2e3440;
+  --surface: #3b4252;
+  --card: #434c5e;
+  --border: #4c566a;
+  --border-strong: #5e6a80;
+  --text: #eceff4;
+  --text-secondary: #9aa5b8;
+  --text-muted: #6a7888;
+  --primary: #88c0d0;
+  --primary-bg: rgba(136, 192, 208, 0.14);
+  --danger: #bf616a;
+  --success: #a3be8c;
+  --radius: 8px;
+  --inset: rgba(255,255,255,0.05);
+  --border-soft: #4c566a;
 }
 * { box-sizing: border-box; }
 .hw, .hw * { font-family: 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: normal; line-height: 1.5; }
@@ -85,7 +205,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@40
 .search input::placeholder { color: var(--text-muted); }
 .icon-btn { width: 32px; height: 32px; border-radius: var(--radius); display: grid; place-items: center; flex: none; cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); transition: .15s; position: relative; }
 .icon-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface); }
-.scroll { overflow-y: auto; padding: 24px; flex: 1; }
+.scroll { overflow-y: auto; padding: 24px; flex: 1; overscroll-behavior: contain; }
 
 /* cards / grid */
 .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: start; }
@@ -165,7 +285,7 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@40
 .assist-h .who { min-width: 0; }
 .assist-h .who .nm { font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 7px; color: var(--text); }
 .assist-h .who .st { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-.chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.chat { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 16px; overscroll-behavior: contain; }
 .msg { display: flex; gap: 12px; max-width: 92%; }
 .msg.me { align-self: flex-end; flex-direction: row-reverse; }
 .bub { padding: 10px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
@@ -313,6 +433,17 @@ const ICOLOR = { slack: "var(--slack)", gcal: "var(--gcal)", calendly: "var(--cl
                  cly: "var(--cly)", github: "var(--gh)", gh: "var(--gh)", email: "var(--email)" };
 const IDMAP = { calendly: "cly", github: "gh" };   // API id -> internal id
 
+const THEMES = [
+  { id: "dark",     label: "Dark",     bg: "#0a0a0a", surface: "#161616", accent: "#4f8ef7" },
+  { id: "light",    label: "Light",    bg: "#f4f4f4", surface: "#ffffff", accent: "#2563eb" },
+  { id: "midnight", label: "Midnight", bg: "#060d1a", surface: "#102030", accent: "#4f8ef7" },
+  { id: "forest",   label: "Forest",   bg: "#050e08", surface: "#0f2318", accent: "#22c55e" },
+  { id: "sunset",   label: "Sunset",   bg: "#0f0805", surface: "#221810", accent: "#f97316" },
+  { id: "aurora",   label: "Aurora",   bg: "#07050f", surface: "#16122a", accent: "#8b5cf6" },
+  { id: "rose",     label: "Rose",     bg: "#0f050a", surface: "#220f18", accent: "#ec4899" },
+  { id: "nord",     label: "Nord",     bg: "#2e3440", surface: "#434c5e", accent: "#88c0d0" },
+];
+
 /* Convert the backend /dashboard payload into the shape the UI already uses. */
 function adaptPayload(p) {
   const now = Date.now();
@@ -452,6 +583,81 @@ function AuthView({ onAuthSuccess }) {
   );
 }
 
+/* ---------------------------- Theme Picker ---------------------------- */
+function ThemePicker({ current, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef(null);
+  const panelRef = useRef(null);
+
+  const toggle = () => {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 8, left: r.left + r.width / 2 });
+    }
+    setOpen(o => !o);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (panelRef.current && !panelRef.current.contains(e.target) && !btnRef.current.contains(e.target))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <>
+      <button ref={btnRef} className="icon-btn" onClick={toggle} title="Change theme">
+        <Palette size={17} />
+      </button>
+      {open && (
+        <div ref={panelRef} style={{
+          position: "fixed", top: pos.top, left: pos.left, transform: "translateX(-50%)",
+          background: "var(--surface)", border: "1px solid var(--border-strong)",
+          borderRadius: 14, padding: "14px 12px", zIndex: 999, width: 230,
+          boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12, paddingLeft: 2 }}>
+            Theme
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+            {THEMES.map(t => {
+              const active = current === t.id;
+              return (
+                <button key={t.id} onClick={() => { onChange(t.id); setOpen(false); }}
+                  title={t.label}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "6px 4px", borderRadius: 10, transition: ".15s" }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: t.bg, position: "relative", overflow: "hidden",
+                    border: active ? "2.5px solid var(--primary)" : "2px solid rgba(255,255,255,0.1)",
+                    boxShadow: active ? "0 0 0 3px var(--primary-bg)" : "none",
+                    transition: ".15s",
+                  }}>
+                    <div style={{ position: "absolute", inset: 0, background: t.surface, clipPath: "polygon(0 55%, 100% 35%, 100% 100%, 0 100%)", opacity: 0.9 }} />
+                    <div style={{ position: "absolute", bottom: 6, right: 6, width: 11, height: 11, borderRadius: "50%", background: t.accent, boxShadow: `0 0 6px ${t.accent}88` }} />
+                    {active && (
+                      <div style={{ position: "absolute", top: 4, left: 4, width: 10, height: 10, borderRadius: "50%", background: "var(--primary)", display: "grid", placeItems: "center" }}>
+                        <Check size={6} color="#fff" strokeWidth={3} />
+                      </div>
+                    )}
+                  </div>
+                  <span style={{ fontSize: 9.5, color: active ? "var(--text)" : "var(--text-muted)", fontWeight: active ? 600 : 400, letterSpacing: "-.01em" }}>
+                    {t.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 /* =========================================================================
    APP
    ========================================================================= */
@@ -461,8 +667,6 @@ export default function App() {
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
-  const toggleTheme = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
-
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -638,9 +842,7 @@ export default function App() {
       {/* ============ CENTER ============ */}
       <main className="center">
         <header className="topbar">
-          <button className="icon-btn" onClick={toggleTheme}>
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
+          <ThemePicker current={theme} onChange={setTheme} />
 
           <button className="icon-btn mobile-only" onClick={() => setNavOpen(true)}><Menu size={18} /></button>
           { <div className="greet">
