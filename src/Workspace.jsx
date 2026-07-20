@@ -201,8 +201,11 @@ const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@40
 .copy-link { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; font-size: 13px; color: var(--text); }
 
 /* responsive */
-@media(max-width:1200px) { .hw{grid-template-columns:220px 1fr} .assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);transition:transform .2s;box-shadow:-20px 0 60px -20px rgba(0,0,0,0.5)} .assist.open{transform:none} .assist-close{display:grid!important} }
-@media(max-width:860px) { .hw{grid-template-columns:1fr} .side{position:fixed;top:0;left:0;bottom:0;width:248px;transform:translateX(-105%);transition:transform .2s;box-shadow:20px 0 60px -20px rgba(0,0,0,0.5)} .side.open{transform:none} .grid{grid-template-columns:1fr} .span2,.hero,.stats{grid-column:span 1} .stats{grid-template-columns:repeat(2,1fr)} .hero{flex-wrap:wrap}.count{margin-left:0} .search{width:auto;flex:1} .mobile-only{display:grid} .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:25;} }
+.mobile-only { display: none !important; }
+.scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40; }
+.side-close { display: none; }
+@media(max-width:1200px) { .hw{grid-template-columns:220px 1fr} .assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px -20px rgba(0,0,0,0.5)} .assist.open{transform:translateX(0)} .assist-close{display:grid!important} }
+@media(max-width:860px) { .hw{grid-template-columns:1fr} .side{position:fixed;top:0;left:0;bottom:0;width:272px;z-index:50;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,0.3);overflow-y:auto} .side.open{transform:translateX(0)} .grid{grid-template-columns:1fr} .span2,.hero,.stats{grid-column:span 1} .stats{grid-template-columns:repeat(2,1fr)} .hero{flex-wrap:wrap}.count{margin-left:0} .search{width:auto;flex:1} .mobile-only{display:grid!important} .scrim{display:block} .side-close{display:grid} }
 .assist-close { display: none; position: absolute; top: 16px; right: 16px; }`;
 
 /* ---------------------------- Mascot SVG ---------------------------- */
@@ -591,7 +594,7 @@ export default function App() {
       <style>{CSS}</style>
 
       {/* ============ SIDEBAR ============ */}
-      {navOpen && <div className="scrim mobile-only" onClick={() => setNavOpen(false)} />}
+      {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
       <aside className={`side ${navOpen ? "open" : ""}`}>
         <div className="brand">
           <Logo size={32} />
@@ -599,6 +602,7 @@ export default function App() {
             <div className="brand-name hw-display">Workspace</div>
             <div className="brand-sub">{user.full_name.split(' ')[0]}'s command center</div>
           </div>
+          <button className="icon-btn side-close" style={{ marginLeft: "auto" }} onClick={() => setNavOpen(false)}><X size={16} /></button>
         </div>
         <div className="nav-label">Menu</div>
         {nav.map((n) => (
