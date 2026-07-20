@@ -29,6 +29,24 @@ def _frontend_redirect(ok: bool, request: Request | None = None) -> RedirectResp
     return RedirectResponse(f"{base}/?connected=slack&ok={int(ok)}")
 
 
+@auth_router.get("/debug-url", summary="Show the Slack OAuth URL without redirecting")
+def slack_debug_url(
+    user: User = Depends(get_current_user),
+) -> dict:
+    return {
+        "client_id": settings.slack_client_id,
+        "redirect_uri": settings.slack_redirect_uri,
+        "scopes": SLACK_SCOPES,
+        "oauth_url": (
+            "https://slack.com/oauth/v2/authorize"
+            f"?client_id={settings.slack_client_id}"
+            f"&user_scope={SLACK_SCOPES}"
+            f"&redirect_uri={settings.slack_redirect_uri}"
+            f"&state=DEBUG_STATE"
+        ),
+    }
+
+
 @auth_router.get("/login", summary="Start Slack OAuth flow")
 def slack_login(
     request: Request,
