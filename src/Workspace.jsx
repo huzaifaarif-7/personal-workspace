@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
-  Video, Link2, ChevronRight, X, Menu, AtSign, GitCommit, Star,
-  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Zap, Bell, Sun, Moon, Palette
+  Video, ChevronRight, X, Menu, AtSign, GitCommit,
+  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette
 } from "lucide-react";
 
 const Logo = ({ size = 28 }) => (
@@ -261,6 +261,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .btn.ghost { background: transparent; border-color: var(--border); color: var(--text-secondary); }
 .btn.ghost:hover { background: var(--surface); color: var(--text); }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 12px; border-radius: 6px; }
 .conn-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; }
 .conn-ic { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; flex: none; }
 .tag-hi { background: color-mix(in srgb, var(--rose) 12%, transparent); color: var(--rose); border-color: color-mix(in srgb, var(--rose) 28%, transparent); }
@@ -377,20 +378,11 @@ function buildData(userName = "User") {
       { id: "c5", title: "Roadmap Planning", start: at(11, 0, 1), end: at(12, 0, 1), priority: "high", location: "Google Meet", attendees: 6, meet: true },
       { id: "c6", title: "Client Demo — Acme", start: at(14, 0, 1), end: at(14, 45, 1), priority: "high", location: "Zoom", attendees: 4 },
     ],
-    calendly: {
-      availability: "Available",
-      link: "calendly.com/user/30min",
-      booked: [
-        { id: "b1", name: "Intro Call", with: "Daniel Wright", time: "Tomorrow · 1:00 PM", type: "30 min" },
-        { id: "b2", name: "Product Walkthrough", with: "Priya Nair", time: "Thu · 4:30 PM", type: "45 min" },
-        { id: "b3", name: "Discovery Call", with: "Tom Becker", time: "Fri · 11:00 AM", type: "30 min" },
-      ],
-    },
     github: [
       { id: "g1", actor: "Ali Hassan", action: "pushed 5 commits", repo: "backend-api", message: "feat: add rate limiting + retry logic to integration layer", time: "10m", commits: 5 },
       { id: "g2", actor: "Sara Khan", action: "opened a pull request", repo: "web-dashboard", message: "Dark theme polish & responsive sidebar", time: "38m", commits: 0, pr: true },
       { id: "g3", actor: userName.split(' ')[0], action: "pushed 2 commits", repo: "ai-assistant", message: "chore: refine assistant system prompt", time: "1h", commits: 2 },
-      { id: "g4", actor: "Bilal", action: "merged a pull request", repo: "web-dashboard", message: "Add Calendly integration cards", time: "3h", commits: 0, pr: true },
+      { id: "g4", actor: "Bilal", action: "merged a pull request", repo: "web-dashboard", message: "Improve dashboard card layouts", time: "3h", commits: 0, pr: true },
     ],
     email: [
       { id: "e1", from: "Stripe", subject: "Your invoice for May is ready", preview: "Your subscription invoice of $49.00 has been paid successfully.", time: "12m", unread: true, important: true },
@@ -402,7 +394,6 @@ function buildData(userName = "User") {
     integrations: [
       { id: "slack", name: "Slack", connected: true, color: "var(--slack)", desc: "Mentions, DMs & channels" },
       { id: "gcal", name: "Google Calendar", connected: true, color: "var(--gcal)", desc: "Events & Google Meet" },
-      { id: "cly", name: "Calendly", connected: true, color: "var(--cly)", desc: "Bookings & availability" },
       { id: "gh", name: "GitHub", connected: true, color: "var(--gh)", desc: "Commits & repo activity" },
       { id: "email", name: "Gmail", connected: true, color: "var(--email)", desc: "Inbox & important mail" },
     ],
@@ -412,7 +403,7 @@ function buildData(userName = "User") {
 /* ---------------------------- helpers ---------------------------- */
 const fmtTime = (d) => d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 const PRIO = { high: ["High", "tag-hi"], medium: ["Medium", "tag-md"], low: ["Low", "tag-lo"] };
-const intIcon = { slack: SlackIcon, gcal: Calendar, cly: Link2, gh: Github, email: Mail };
+const intIcon = { slack: SlackIcon, gcal: Calendar, gh: Github, email: Mail };
 
 function Initials({ name, ...p }) {
   const i = name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
@@ -441,9 +432,8 @@ const API_BASE =
   (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_API_BASE) ||
   "/api";   // relative path → routes through the Vite dev server proxy to localhost:8000
 
-const ICOLOR = { slack: "var(--slack)", gcal: "var(--gcal)", calendly: "var(--cly)",
-                 cly: "var(--cly)", github: "var(--gh)", gh: "var(--gh)", email: "var(--email)" };
-const IDMAP = { calendly: "cly", github: "gh" };   // API id -> internal id
+const ICOLOR = { slack: "var(--slack)", gcal: "var(--gcal)", github: "var(--gh)", gh: "var(--gh)", email: "var(--email)" };
+const IDMAP = { github: "gh" };   // API id -> internal id
 
 const THEMES = [
   { id: "dark",     label: "Dark",     bg: "#0a0a0a", surface: "#161616", accent: "#4f8ef7" },
@@ -465,7 +455,6 @@ function adaptPayload(p) {
       ...e, start: new Date(e.start), end: new Date(e.end),
       done: new Date(e.end).getTime() < now,
     })),
-    calendly: p.calendly,
     github: p.github,
     email: p.email,
     integrations: (p.integrations || []).map((it) => {
@@ -907,7 +896,7 @@ export default function App() {
 
         <div className="scroll">
           {view === "dashboard" && <Dashboard data={data} events={events} todayEvents={todayEvents}
-            unreadSlack={unreadSlack} unreadEmail={unreadEmail} onNewEvent={() => setNewEvent(true)} go={go} />}
+            unreadSlack={unreadSlack} unreadEmail={unreadEmail} onNewEvent={() => setNewEvent(true)} go={go} onConnect={liveConnect} />}
           {view === "calendar" && <CalendarView events={events} onNew={() => setNewEvent(true)} />}
           {view === "messages" && <MessagesView slack={data.slack} slackConnected={data.integrations.find((i) => i.id === "slack")?.connected} onConnect={liveConnect} onDisconnect={() => {
             if (API_BASE && mode === "live") {
@@ -948,9 +937,10 @@ export default function App() {
 }
 
 /* ---------------------------- Dashboard ---------------------------- */
-function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go }) {
+function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go, onConnect }) {
   const { next, text } = useCountdown(events);
   const slackConnected = data.integrations.find((i) => i.id === "slack")?.connected;
+  const gcalConnected = data.integrations.find((i) => i.id === "gcal")?.connected;
   const ghConnected = data.integrations.find((i) => i.id === "gh")?.connected;
   const emailConnected = data.integrations.find((i) => i.id === "email")?.connected;
   const stats = [
@@ -995,10 +985,10 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
       {/* Slack */}
       <Card icon={SlackIcon} color="var(--slack)" title="Slack" sub={slackConnected ? "Mentions & messages" : "Not connected"}
         action={slackConnected
-          ? <a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open in Slack <ExternalLink size={12} /></a>
-          : <button type="button" className="link-btn" onClick={() => go("messages")}>Connect <ArrowUpRight size={12} /></button>}>
+          ? <a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
+          : <button type="button" className="btn sm" onClick={() => onConnect("slack")}>Connect</button>}>
         {slackConnected && data.slack.mentions && data.slack.mentions.length > 0 ? data.slack.mentions.slice(0, 3).map((m) => (
-          <div className={`row ${(m.id).unread || (m.id).isUnread ? "unread" : ""}`} key={m.id}>
+          <div className="row" key={m.id}>
             <Initials name={m.from} />
             <div className="body">
               <div className="top">
@@ -1011,17 +1001,21 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
             </div>
           </div>
         )) : (
-          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
-            {slackConnected ? "No recent Slack mentions" : "Connect Slack in Settings to see your mentions here"}
+          <div className="empty-state">
+            <div className="text">{slackConnected ? "No recent mentions" : "Connect Slack to see your mentions here"}</div>
+            {!slackConnected && <button className="btn sm" onClick={() => onConnect("slack")}>Connect Slack</button>}
           </div>
         )}
       </Card>
 
       {/* Calendar */}
-      <Card icon={Calendar} color="var(--gcal)" title="Today's schedule" sub={`${todayEvents.length} events`}
-        action={<span className="link-btn" onClick={onNewEvent}><Plus size={13} /> New event</span>}>
-        {todayEvents.map((e) => (
-          <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id} style={{ opacity: e.done ? 0.5 : 1 }}>
+      <Card icon={Calendar} color="var(--gcal)" title="Today's schedule"
+        sub={gcalConnected ? `${todayEvents.length} event${todayEvents.length !== 1 ? "s" : ""}` : "Not connected"}
+        action={gcalConnected
+          ? <button type="button" className="btn sm" onClick={onNewEvent}><Plus size={12} /> New event</button>
+          : <button type="button" className="btn sm primary" onClick={() => onConnect("gcal")}>Connect</button>}>
+        {gcalConnected ? todayEvents.map((e) => (
+          <div className="row" key={e.id} style={{ opacity: e.done ? 0.5 : 1 }}>
             <div style={{ textAlign: "center", flex: "none", width: 52 }}>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtTime(e.start)}</div>
               <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{e.done ? "done" : fmtTime(e.end)}</div>
@@ -1037,16 +1031,22 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
               </div>
             </div>
           </div>
-        ))}
+        )) : (
+          <div className="empty-state">
+            <Calendar size={28} color="var(--text-muted)" />
+            <div className="text">Connect Google Calendar to see your schedule</div>
+            <button className="btn sm primary" onClick={() => onConnect("gcal")}><Calendar size={12} /> Connect Google Calendar</button>
+          </div>
+        )}
       </Card>
 
       {/* GitHub */}
       <Card icon={Github} color="var(--gh)" title="GitHub activity" sub={ghConnected ? "Recent commits & PRs" : "Not connected"}
         action={ghConnected
           ? <a className="link-btn" href="https://github.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
-          : <button type="button" className="link-btn" onClick={() => go("github")}>Connect <ArrowUpRight size={12} /></button>}>
-        {data.github.length > 0 ? data.github.slice(0, 4).map((g) => (
-          <div className={`row ${(g.id).unread || (g.id).isUnread ? "unread" : ""}`} key={g.id}>
+          : <button type="button" className="btn sm" onClick={() => onConnect("gh")}>Connect</button>}>
+        {ghConnected && data.github.length > 0 ? data.github.slice(0, 4).map((g) => (
+          <div className="row" key={g.id}>
             <Initials name={g.actor} />
             <div className="body">
               <div className="top">
@@ -1057,19 +1057,21 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
             </div>
           </div>
         )) : (
-          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
-            {ghConnected ? "No recent GitHub activity" : "Connect GitHub in Settings to see activity here"}
+          <div className="empty-state">
+            <div className="text">{ghConnected ? "No recent activity" : "Connect GitHub to see your activity here"}</div>
+            {!ghConnected && <button className="btn sm" onClick={() => onConnect("gh")}>Connect GitHub</button>}
           </div>
         )}
       </Card>
 
       {/* Email */}
-      <Card icon={Mail} color="var(--email)" title="Inbox" sub={emailConnected ? `${data.email.filter((e) => e.unread).length} unread` : "Not connected"}
+      <Card icon={Mail} color="var(--email)" title="Inbox"
+        sub={emailConnected ? `${data.email.filter((e) => e.unread).length} unread` : "Not connected"}
         action={emailConnected
-          ? <a className="link-btn" href="https://mail.google.com" target="_blank" rel="noreferrer">Open in Gmail <ExternalLink size={12} /></a>
-          : <button type="button" className="link-btn" onClick={() => go("email")}>Connect <ArrowUpRight size={12} /></button>}>
-        {data.email.length > 0 ? data.email.slice(0, 4).map((e) => (
-          <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id}>
+          ? <a className="link-btn" href="https://mail.google.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
+          : <button type="button" className="btn sm" onClick={() => onConnect("email")}>Connect</button>}>
+        {emailConnected && data.email.length > 0 ? data.email.slice(0, 4).map((e) => (
+          <div className="row" key={e.id}>
             <Initials name={e.from} />
             <div className="body">
               <div className="top">
@@ -1082,28 +1084,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
             </div>
           </div>
         )) : (
-          <div style={{ color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: "14px 12px" }}>
-            {emailConnected ? "No new emails" : "Connect Gmail in Settings to see your inbox here"}
+          <div className="empty-state">
+            <div className="text">{emailConnected ? "No new emails" : "Connect Gmail to see your inbox here"}</div>
+            {!emailConnected && <button className="btn sm" onClick={() => onConnect("email")}>Connect Gmail</button>}
           </div>
         )}
-      </Card>
-
-      {/* Calendly */}
-      <Card icon={Link2} color="var(--cly)" title="Calendly" sub="Bookings & availability" className="span2"
-        action={<span className="live"><i />{data.calendly.availability}</span>}>
-        <CalendlyLink link={data.calendly.link} />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 4 }}>
-          {data.calendly.booked.map((b) => (
-            <div className={`row ${(b.id).unread || (b.id).isUnread ? "unread" : ""}`} key={b.id} style={{ alignItems: "flex-start" }}>
-              <div className="body">
-                <div className="top"><span className="name">{b.name}</span></div>
-                <div className="text" style={{ WebkitLineClamp: 3 }}>
-                  with <b>{b.with}</b><br />{b.time}<br /><span style={{ color: "var(--text-muted)" }}>{b.type}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
       </Card>
     </div>
   );
@@ -1127,24 +1112,6 @@ function Card({ icon: Ic, color, title, sub, action, children, className = "" })
   );
 }
 
-function CalendlyLink({ link }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => {
-    try { navigator.clipboard?.writeText("https://" + link); } catch {}
-    setCopied(true); setTimeout(() => setCopied(false), 1600);
-  };
-  return (
-    <div style={{ padding: "4px 12px 14px" }}>
-      <div className="copy-link">
-        <Link2 size={15} color="var(--cly)" />
-        <span className="url">{link}</span>
-        <button className="btn" style={{ padding: "7px 11px" }} onClick={copy}>
-          {copied ? <><Check size={13} color="var(--success)" /> Copied</> : <><Copy size={13} /> Copy link</>}
-        </button>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------------------- Calendar view ---------------------------- */
 function CalendarView({ events, onNew }) {
@@ -1570,7 +1537,7 @@ function EmailView() {
 function SettingsView({ integrations, mode, onConnect }) {
   const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, i.connected])));
   const live = mode === "live";
-  const oauthIds = ["gh", "gcal", "email", "slack"];   // these connect via browser OAuth
+  const oauthIds = ["gh", "gcal", "email", "slack"];
 
   const handleDisconnect = (itId) => {
     if (!live) {
@@ -1606,7 +1573,7 @@ function SettingsView({ integrations, mode, onConnect }) {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 650, fontSize: 14 }}>{it.name}</div>
-                <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.desc}{live && it.id === "cly" ? " · token" : ""}{live && it.id === "slack" ? " · token" : ""}</div>
+                <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.desc}{live && it.id === "slack" ? " · OAuth" : ""}</div>
               </div>
               {on
                 ? <button className="btn connected" onClick={() => handleDisconnect(it.id)}><CheckCircle2 size={15} /> Connected</button>
@@ -1791,7 +1758,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
 
         <div className="sheet-b">
           {step === 0 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
-            Stop tab-hopping between Slack, Calendar, Calendly, GitHub and email. Connect them once and get a single, intelligent overview — plus an AI assistant that summarizes your whole day in seconds.
+            Stop tab-hopping between Slack, Calendar, GitHub and email. Connect them once and get a single, intelligent overview — plus an AI assistant that summarizes your whole day in seconds.
           </p>}
 
           {step === 1 && <div style={{ display: "grid", gap: 10 }}>
