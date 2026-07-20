@@ -72,84 +72,84 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
   --card: #102030;
   --border: #1c3050;
   --border-strong: #254070;
-  --text: #e8f0fe;
-  --text-secondary: #7a9cc8;
-  --text-muted: #3d5a80;
-  --primary: #4f8ef7;
-  --primary-bg: rgba(79, 142, 247, 0.14);
-  --danger: #f87171;
-  --success: #4ade80;
+  --text: #e0e8f8;
+  --text-secondary: #6888b8;
+  --text-muted: #304870;
+  --primary: #3d72d4;
+  --primary-bg: rgba(61, 114, 212, 0.12);
+  --danger: #e05555;
+  --success: #38a868;
   --radius: 8px;
   --inset: rgba(255,255,255,0.04);
   --border-soft: #1c3050;
 }
 :root[data-theme="forest"] {
-  --bg: #050e08;
-  --surface: #0a1a0f;
-  --card: #0f2318;
-  --border: #1a3d27;
-  --border-strong: #235235;
-  --text: #e2f5e8;
-  --text-secondary: #6ea87f;
-  --text-muted: #2d5c3a;
-  --primary: #22c55e;
-  --primary-bg: rgba(34, 197, 94, 0.12);
-  --danger: #f87171;
-  --success: #4ade80;
+  --bg: #060d08;
+  --surface: #0c1a10;
+  --card: #112016;
+  --border: #1a3020;
+  --border-strong: #224030;
+  --text: #d0e8d4;
+  --text-secondary: #5a8865;
+  --text-muted: #2a4830;
+  --primary: #1e8a4c;
+  --primary-bg: rgba(30, 138, 76, 0.12);
+  --danger: #e05555;
+  --success: #38a868;
   --radius: 8px;
   --inset: rgba(255,255,255,0.04);
-  --border-soft: #1a3d27;
+  --border-soft: #1a3020;
 }
 :root[data-theme="sunset"] {
-  --bg: #0f0805;
-  --surface: #1a110a;
-  --card: #221810;
-  --border: #3d2a1a;
-  --border-strong: #5c3f26;
-  --text: #fef3ec;
-  --text-secondary: #c8936a;
-  --text-muted: #7a4a28;
-  --primary: #f97316;
-  --primary-bg: rgba(249, 115, 22, 0.12);
-  --danger: #f87171;
-  --success: #4ade80;
+  --bg: #0d0a06;
+  --surface: #181208;
+  --card: #201a10;
+  --border: #362515;
+  --border-strong: #504030;
+  --text: #ede0cc;
+  --text-secondary: #a07845;
+  --text-muted: #684828;
+  --primary: #b56420;
+  --primary-bg: rgba(181, 100, 32, 0.12);
+  --danger: #e05555;
+  --success: #38a868;
   --radius: 8px;
   --inset: rgba(255,255,255,0.04);
-  --border-soft: #3d2a1a;
+  --border-soft: #362515;
 }
 :root[data-theme="aurora"] {
-  --bg: #07050f;
-  --surface: #100d1f;
-  --card: #16122a;
-  --border: #261d3f;
-  --border-strong: #362a58;
-  --text: #ede9fe;
-  --text-secondary: #9070cc;
-  --text-muted: #4a3580;
-  --primary: #8b5cf6;
-  --primary-bg: rgba(139, 92, 246, 0.14);
-  --danger: #f87171;
-  --success: #4ade80;
+  --bg: #070610;
+  --surface: #0f0c1e;
+  --card: #15122c;
+  --border: #201c3c;
+  --border-strong: #302858;
+  --text: #ddd8f8;
+  --text-secondary: #7864b0;
+  --text-muted: #3c3070;
+  --primary: #7050c0;
+  --primary-bg: rgba(112, 80, 192, 0.12);
+  --danger: #e05555;
+  --success: #38a868;
   --radius: 8px;
   --inset: rgba(255,255,255,0.04);
-  --border-soft: #261d3f;
+  --border-soft: #201c3c;
 }
 :root[data-theme="rose"] {
-  --bg: #0f050a;
-  --surface: #1a0a12;
-  --card: #220f18;
-  --border: #3d1a2a;
-  --border-strong: #5c2640;
-  --text: #fce7f3;
-  --text-secondary: #c870a0;
-  --text-muted: #7a2a4a;
-  --primary: #ec4899;
-  --primary-bg: rgba(236, 72, 153, 0.14);
-  --danger: #f87171;
-  --success: #4ade80;
+  --bg: #0e0608;
+  --surface: #180c10;
+  --card: #201018;
+  --border: #301824;
+  --border-strong: #482438;
+  --text: #edd8e4;
+  --text-secondary: #9c6880;
+  --text-muted: #5c3048;
+  --primary: #a84070;
+  --primary-bg: rgba(168, 64, 112, 0.12);
+  --danger: #e05555;
+  --success: #38a868;
   --radius: 8px;
   --inset: rgba(255,255,255,0.04);
-  --border-soft: #3d1a2a;
+  --border-soft: #301824;
 }
 :root[data-theme="nord"] {
   --bg: #2e3440;
@@ -158,19 +158,19 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
   --border: #4c566a;
   --border-strong: #5e6a80;
   --text: #eceff4;
-  --text-secondary: #9aa5b8;
-  --text-muted: #6a7888;
-  --primary: #88c0d0;
-  --primary-bg: rgba(136, 192, 208, 0.14);
+  --text-secondary: #8898b0;
+  --text-muted: #5a6880;
+  --primary: #3d7a8c;
+  --primary-bg: rgba(61, 122, 140, 0.14);
   --danger: #bf616a;
-  --success: #a3be8c;
+  --success: #8aad72;
   --radius: 8px;
   --inset: rgba(255,255,255,0.05);
   --border-soft: #4c566a;
 }
 * { box-sizing: border-box; }
 .hw, .hw * { font-family: 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: normal; line-height: 1.5; }
-.hw { background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; display: grid; grid-template-columns: 220px 1fr 372px; grid-template-rows: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 13px; }
+.hw { background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; display: grid; grid-template-columns: 220px 1fr 372px; grid-template-rows: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 13px; transition: grid-template-columns .25s cubic-bezier(.4,0,.2,1); }
 
 /* scrollbars */
 .hw ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -178,7 +178,7 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .hw ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); background-clip: padding-box; }
 
 /* sidebar */
-.side { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 14px; gap: 6px; min-width: 0; position: relative; z-index: 30; }
+.side { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 14px; gap: 6px; min-width: 0; position: relative; z-index: 30; overflow: hidden; transition: padding .2s cubic-bezier(.4,0,.2,1); }
 .brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 18px; }
 .brand-mark { width: 28px; height: 28px; border-radius: 50%; background: var(--text); display: grid; place-items: center; flex: none; color: var(--bg); }
 .brand-name { font-weight: 500; font-size: 16px; color: var(--text); }
@@ -251,11 +251,22 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .auth-tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
 .auth-tab { flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 400; color: var(--text-muted); cursor: pointer; transition: .15s; border: none; background: none; border-bottom: 2px solid transparent; }
 .auth-tab.active { color: var(--text); border-bottom: 2px solid var(--primary); font-weight: 500; }
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 500; height: 36px; padding: 0 14px; border-radius: var(--radius); cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--text); transition: .15s; }
-.btn:hover { background: var(--surface); }
-.btn.primary { background: var(--primary); border: none; color: #fff; width: 100%; }
-.btn.primary:hover { background: color-mix(in srgb, var(--primary) 85%, #000); }
-.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; font-size: 13px; font-weight: 500; height: 36px; padding: 0 14px; border-radius: var(--radius); cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface); color: var(--text); transition: .15s; white-space: nowrap; }
+.btn:hover { background: var(--card); border-color: var(--border-strong); }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover { background: color-mix(in srgb, var(--primary) 85%, #000); border-color: color-mix(in srgb, var(--primary) 85%, #000); }
+.btn.block { width: 100%; }
+.btn.connected { background: color-mix(in srgb, var(--success) 10%, var(--surface)); border-color: color-mix(in srgb, var(--success) 35%, transparent); color: var(--success); }
+.btn.connected:hover { background: color-mix(in srgb, var(--success) 16%, var(--surface)); }
+.btn.ghost { background: transparent; border-color: var(--border); color: var(--text-secondary); }
+.btn.ghost:hover { background: var(--surface); color: var(--text); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.conn-card { display: flex; align-items: center; gap: 14px; padding: 16px; background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; }
+.conn-ic { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+.tag-hi { background: color-mix(in srgb, var(--rose) 12%, transparent); color: var(--rose); border-color: color-mix(in srgb, var(--rose) 28%, transparent); }
+.tag-md { background: color-mix(in srgb, var(--amber) 12%, transparent); color: var(--amber); border-color: color-mix(in srgb, var(--amber) 28%, transparent); }
+.tag-lo { background: color-mix(in srgb, var(--green) 12%, transparent); color: var(--green); border-color: color-mix(in srgb, var(--green) 28%, transparent); }
+.tag-imp { background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); border-color: color-mix(in srgb, var(--primary) 28%, transparent); }
 
 /* hero / countdown */
 .hero { grid-column: span 2; background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 24px; display: flex; align-items: center; gap: 20px; }
@@ -324,8 +335,9 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .mobile-only { display: none !important; }
 .scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40; }
 .side-close { display: none; }
-@media(max-width:1200px) { .hw{grid-template-columns:220px 1fr} .assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px -20px rgba(0,0,0,0.5)} .assist.open{transform:translateX(0)} .assist-close{display:grid!important} }
-@media(max-width:860px) { .hw{grid-template-columns:1fr} .side{position:fixed;top:0;left:0;bottom:0;width:272px;z-index:50;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,0.3);overflow-y:auto} .side.open{transform:translateX(0)} .grid{grid-template-columns:1fr} .span2,.hero,.stats{grid-column:span 1} .stats{grid-template-columns:repeat(2,1fr)} .hero{flex-wrap:wrap}.count{margin-left:0} .search{width:auto;flex:1} .mobile-only{display:grid!important} .scrim{display:block} .side-close{display:grid} }
+@media(min-width:861px){.hw.sidebar-collapsed{grid-template-columns:0px 1fr 372px}.hw.sidebar-collapsed .side{padding:0;border-right-color:transparent}}
+@media(max-width:1200px){.hw{grid-template-columns:220px 1fr}.hw.sidebar-collapsed{grid-template-columns:0px 1fr}.assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px -20px rgba(0,0,0,0.5)}.assist.open{transform:translateX(0)}.assist-close{display:grid!important}}
+@media(max-width:860px){.hw{grid-template-columns:1fr}.hw.sidebar-collapsed{grid-template-columns:1fr}.side{position:fixed;top:0;left:0;bottom:0;width:272px;z-index:50;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,0.3);overflow-y:auto;overflow-x:hidden;padding:20px 14px}.side.open{transform:translateX(0)}.grid{grid-template-columns:1fr}.span2,.hero,.stats{grid-column:span 1}.stats{grid-template-columns:repeat(2,1fr)}.hero{flex-wrap:wrap}.count{margin-left:0}.search{width:auto;flex:1}.mobile-only{display:grid!important}.scrim{display:block}.side-close{display:grid}}
 .assist-close { display: none; position: absolute; top: 16px; right: 16px; }`;
 
 /* ---------------------------- Mascot SVG ---------------------------- */
@@ -435,13 +447,13 @@ const IDMAP = { calendly: "cly", github: "gh" };   // API id -> internal id
 
 const THEMES = [
   { id: "dark",     label: "Dark",     bg: "#0a0a0a", surface: "#161616", accent: "#4f8ef7" },
-  { id: "light",    label: "Light",    bg: "#f4f4f4", surface: "#ffffff", accent: "#2563eb" },
-  { id: "midnight", label: "Midnight", bg: "#060d1a", surface: "#102030", accent: "#4f8ef7" },
-  { id: "forest",   label: "Forest",   bg: "#050e08", surface: "#0f2318", accent: "#22c55e" },
-  { id: "sunset",   label: "Sunset",   bg: "#0f0805", surface: "#221810", accent: "#f97316" },
-  { id: "aurora",   label: "Aurora",   bg: "#07050f", surface: "#16122a", accent: "#8b5cf6" },
-  { id: "rose",     label: "Rose",     bg: "#0f050a", surface: "#220f18", accent: "#ec4899" },
-  { id: "nord",     label: "Nord",     bg: "#2e3440", surface: "#434c5e", accent: "#88c0d0" },
+  { id: "light",    label: "Light",    bg: "#f0f0f0", surface: "#ffffff", accent: "#2563eb" },
+  { id: "midnight", label: "Midnight", bg: "#060d1a", surface: "#102030", accent: "#3d72d4" },
+  { id: "forest",   label: "Forest",   bg: "#060d08", surface: "#112016", accent: "#1e8a4c" },
+  { id: "sunset",   label: "Sunset",   bg: "#0d0a06", surface: "#201a10", accent: "#b56420" },
+  { id: "aurora",   label: "Aurora",   bg: "#070610", surface: "#15122c", accent: "#7050c0" },
+  { id: "rose",     label: "Rose",     bg: "#0e0608", surface: "#201018", accent: "#a84070" },
+  { id: "nord",     label: "Nord",     bg: "#2e3440", surface: "#434c5e", accent: "#3d7a8c" },
 ];
 
 /* Convert the backend /dashboard payload into the shape the UI already uses. */
@@ -573,7 +585,7 @@ function AuthView({ onAuthSuccess }) {
                 </div>
               )}
               
-              <button type="submit" disabled={loading} className="btn primary">
+              <button type="submit" disabled={loading} className="btn primary block">
                 {loading ? "Please wait..." : mode === "login" ? "Log in to workspace" : "Create account"}
               </button>
             </form>
@@ -593,7 +605,7 @@ function ThemePicker({ current, onChange }) {
   const toggle = () => {
     if (!open && btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 8, left: r.left + r.width / 2 });
+      setPos({ top: r.bottom + 10, left: Math.min(r.left + r.width / 2, window.innerWidth - 130) });
     }
     setOpen(o => !o);
   };
@@ -610,42 +622,65 @@ function ThemePicker({ current, onChange }) {
 
   return (
     <>
-      <button ref={btnRef} className="icon-btn" onClick={toggle} title="Change theme">
-        <Palette size={17} />
+      <button ref={btnRef} className="icon-btn" onClick={toggle} title="Change theme" style={{ background: open ? "var(--surface)" : undefined }}>
+        <Palette size={16} />
       </button>
       {open && (
         <div ref={panelRef} style={{
           position: "fixed", top: pos.top, left: pos.left, transform: "translateX(-50%)",
-          background: "var(--surface)", border: "1px solid var(--border-strong)",
-          borderRadius: 14, padding: "14px 12px", zIndex: 999, width: 230,
-          boxShadow: "0 12px 32px rgba(0,0,0,0.45)",
+          background: "var(--card)", border: "1px solid var(--border-strong)",
+          borderRadius: 14, padding: "16px 14px", zIndex: 1000, width: 244,
+          boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
         }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 12, paddingLeft: 2 }}>
-            Theme
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 14 }}>
+            Appearance
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
             {THEMES.map(t => {
               const active = current === t.id;
+              const isLight = t.id === "light";
               return (
                 <button key={t.id} onClick={() => { onChange(t.id); setOpen(false); }}
                   title={t.label}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer", padding: "6px 4px", borderRadius: 10, transition: ".15s" }}>
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: "4px 2px", borderRadius: 8 }}>
                   <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: t.bg, position: "relative", overflow: "hidden",
-                    border: active ? "2.5px solid var(--primary)" : "2px solid rgba(255,255,255,0.1)",
-                    boxShadow: active ? "0 0 0 3px var(--primary-bg)" : "none",
-                    transition: ".15s",
+                    width: 42, height: 42, borderRadius: 11, background: t.bg,
+                    position: "relative", overflow: "hidden", flexShrink: 0,
+                    border: active
+                      ? "2.5px solid var(--primary)"
+                      : isLight
+                        ? "2px solid rgba(0,0,0,0.15)"
+                        : "2px solid rgba(255,255,255,0.12)",
+                    boxShadow: active ? `0 0 0 3px var(--primary-bg), inset 0 0 0 1px rgba(255,255,255,0.08)` : "inset 0 0 0 1px rgba(255,255,255,0.06)",
+                    transition: "border .15s, box-shadow .15s",
                   }}>
-                    <div style={{ position: "absolute", inset: 0, background: t.surface, clipPath: "polygon(0 55%, 100% 35%, 100% 100%, 0 100%)", opacity: 0.9 }} />
-                    <div style={{ position: "absolute", bottom: 6, right: 6, width: 11, height: 11, borderRadius: "50%", background: t.accent, boxShadow: `0 0 6px ${t.accent}88` }} />
+                    <div style={{
+                      position: "absolute", inset: 0,
+                      background: t.surface,
+                      clipPath: "polygon(0 60%, 100% 40%, 100% 100%, 0 100%)",
+                    }} />
+                    <div style={{
+                      position: "absolute", bottom: 6, right: 6,
+                      width: 10, height: 10, borderRadius: "50%",
+                      background: t.accent,
+                      boxShadow: `0 0 5px ${t.accent}99`,
+                    }} />
                     {active && (
-                      <div style={{ position: "absolute", top: 4, left: 4, width: 10, height: 10, borderRadius: "50%", background: "var(--primary)", display: "grid", placeItems: "center" }}>
-                        <Check size={6} color="#fff" strokeWidth={3} />
+                      <div style={{
+                        position: "absolute", top: 5, left: 5, width: 12, height: 12,
+                        borderRadius: "50%", background: "var(--primary)",
+                        display: "grid", placeItems: "center",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.4)",
+                      }}>
+                        <Check size={7} color="#fff" strokeWidth={3.5} />
                       </div>
                     )}
                   </div>
-                  <span style={{ fontSize: 9.5, color: active ? "var(--text)" : "var(--text-muted)", fontWeight: active ? 600 : 400, letterSpacing: "-.01em" }}>
+                  <span style={{
+                    fontSize: 10, letterSpacing: "-.01em",
+                    color: active ? "var(--text)" : "var(--text-secondary)",
+                    fontWeight: active ? 600 : 400,
+                  }}>
                     {t.label}
                   </span>
                 </button>
@@ -667,6 +702,8 @@ export default function App() {
     localStorage.setItem('theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -794,7 +831,7 @@ export default function App() {
   };
 
   return (
-    <div className="hw">
+    <div className={`hw ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <style>{CSS}</style>
 
       {/* ============ SIDEBAR ============ */}
@@ -842,9 +879,9 @@ export default function App() {
       {/* ============ CENTER ============ */}
       <main className="center">
         <header className="topbar">
-          <ThemePicker current={theme} onChange={setTheme} />
+          <button className="icon-btn" onClick={() => window.innerWidth <= 860 ? setNavOpen(true) : setSidebarCollapsed(c => !c)} title="Toggle sidebar"><Menu size={18} /></button>
 
-          <button className="icon-btn mobile-only" onClick={() => setNavOpen(true)}><Menu size={18} /></button>
+          <ThemePicker current={theme} onChange={setTheme} />
           { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
             {/* { <p>{dateStr} · Here's everything across your workspace</p>} */}
