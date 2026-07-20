@@ -21,10 +21,12 @@ auth_router = APIRouter(prefix="/auth/slack", tags=["slack-auth"])
 slack_router = APIRouter(prefix="/slack", tags=["slack"])
 
 
-def _frontend_redirect(ok: bool) -> RedirectResponse:
-    return RedirectResponse(
-        f"{settings.frontend_url}/?connected=slack&ok={int(ok)}"
-    )
+def _frontend_redirect(ok: bool, request: Request | None = None) -> RedirectResponse:
+    if request is not None:
+        base = f"{request.url.scheme}://{request.url.netloc}"
+    else:
+        base = settings.frontend_url
+    return RedirectResponse(f"{base}/?connected=slack&ok={int(ok)}")
 
 
 @auth_router.get("/login", summary="Start Slack OAuth flow")
@@ -70,17 +72,17 @@ async def slack_callback(
 ) -> RedirectResponse:
     if error:
         log.warning("Slack OAuth denied: %s", error)
-        return _frontend_redirect(ok=False)
+        return _frontend_redirect(ok=False, request=request)
 
     if not code or not state:
         log.warning("Slack callback missing code or state param")
-        return _frontend_redirect(ok=False)
+        return _frontend_redirect(ok=False, request=request)
 
     stored_state = request.session.pop("slack_oauth_state", None)
 
     if not stored_state or stored_state != state:
         log.warning("Slack OAuth CSRF state mismatch")
-        return _frontend_redirect(ok=False)
+        return _frontend_redirect(ok=False, request=request)
 
     async with httpx.AsyncClient(timeout=10) as client:
         res = await client.post(
@@ -95,7 +97,7 @@ async def slack_callback(
         data = res.json()
         if not data.get("ok"):
             log.error("Slack token exchange failed: %s", data.get("error"))
-            return _frontend_redirect(ok=False)
+            return _frontend_redirect(ok=False, request=request)
 
         authed_user = data.get("authed_user", {})
         raw_token = authed_user.get("access_token")
@@ -103,7 +105,7 @@ async def slack_callback(
 
         if not raw_token or not slack_user_id:
             log.error("Slack OAuth missing access_token or user_id")
-            return _frontend_redirect(ok=False)
+            return _frontend_redirect(ok=False, request=request)
 
     encrypted = encrypt_token(raw_token)
     conn = (
@@ -126,7 +128,7 @@ async def slack_callback(
         log.info("Created SlackConnection for user_id=%d", user.id)
 
     db.commit()
-    return _frontend_redirect(ok=True)
+    return _frontend_redirect(ok=True, request=request)
 
 
 @auth_router.post("/disconnect", summary="Disconnect Slack account")
