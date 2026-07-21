@@ -3,7 +3,8 @@ import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
   Video, ChevronRight, X, Menu, AtSign, GitCommit,
-  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette
+  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette,
+  MessageCircle
 } from "lucide-react";
 
 const Logo = ({ size = 28 }) => (
@@ -17,7 +18,34 @@ const Logo = ({ size = 28 }) => (
    Single-file dashboard. Dark "twilight command center" identity.
    ========================================================================= */
 
-const CSS = `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+const CSS = `
+/* ── Local fonts (served from /public/fonts/) ── */
+@font-face { font-family: 'Satoshi';         src: url('/fonts/satoshi/satoshi-400.woff2')         format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Satoshi';         src: url('/fonts/satoshi/satoshi-500.woff2')         format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Satoshi';         src: url('/fonts/satoshi/satoshi-700.woff2')         format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'General Sans';    src: url('/fonts/general-sans/generalsans-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'General Sans';    src: url('/fonts/general-sans/generalsans-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'General Sans';    src: url('/fonts/general-sans/generalsans-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Cabinet Grotesk'; src: url('/fonts/cabinet-grotesk/cabinet-400.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Cabinet Grotesk'; src: url('/fonts/cabinet-grotesk/cabinet-500.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Cabinet Grotesk'; src: url('/fonts/cabinet-grotesk/cabinet-700.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Switzer';         src: url('/fonts/switzer/switzer-400.woff2')         format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Switzer';         src: url('/fonts/switzer/switzer-500.woff2')         format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Switzer';         src: url('/fonts/switzer/switzer-700.woff2')         format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Clash Display';   src: url('/fonts/clash-display/clash-400.woff2')     format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Clash Display';   src: url('/fonts/clash-display/clash-500.woff2')     format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Clash Display';   src: url('/fonts/clash-display/clash-700.woff2')     format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Synonym';         src: url('/fonts/synonym/synonym-400.woff2')         format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Synonym';         src: url('/fonts/synonym/synonym-500.woff2')         format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Synonym';         src: url('/fonts/synonym/synonym-700.woff2')         format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Chillax';         src: url('/fonts/chillax/chillax-400.woff2')         format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Chillax';         src: url('/fonts/chillax/chillax-500.woff2')         format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Chillax';         src: url('/fonts/chillax/chillax-700.woff2')         format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Inter';           src: url('/fonts/inter/inter-400.woff2')             format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Inter';           src: url('/fonts/inter/inter-500.woff2')             format('woff2'); font-weight: 500; font-display: swap; }
+@font-face { font-family: 'Inter';           src: url('/fonts/inter/inter-700.woff2')             format('woff2'); font-weight: 700; font-display: swap; }
+
+:root { --font-sans: 'Inter', system-ui, -apple-system, sans-serif; }
 
 html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 
@@ -169,8 +197,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
   --border-soft: #4c566a;
 }
 * { box-sizing: border-box; }
-.hw, .hw * { font-family: 'Inter', system-ui, -apple-system, sans-serif; letter-spacing: normal; line-height: 1.5; }
-.hw { background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; display: grid; grid-template-columns: 220px 1fr 372px; grid-template-rows: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 13px; transition: grid-template-columns .25s cubic-bezier(.4,0,.2,1); }
+.hw, .hw * { font-family: var(--font-sans); letter-spacing: normal; line-height: 1.5; }
+.hw { background: var(--bg); color: var(--text); min-height: 100vh; width: 100%; display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; font-size: 13px; transition: grid-template-columns .25s cubic-bezier(.4,0,.2,1); }
 
 /* scrollbars */
 .hw ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -336,10 +364,8 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .mobile-only { display: none !important; }
 .scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 40; }
 .side-close { display: none; }
-@media(min-width:861px){.hw.sidebar-collapsed{grid-template-columns:0px 1fr 372px}.hw.sidebar-collapsed .side{padding:0;border-right-color:transparent}}
-@media(max-width:1200px){.hw{grid-template-columns:220px 1fr}.hw.sidebar-collapsed{grid-template-columns:0px 1fr}.assist{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:-20px 0 60px -20px rgba(0,0,0,0.5)}.assist.open{transform:translateX(0)}.assist-close{display:grid!important}}
-@media(max-width:860px){.hw{grid-template-columns:1fr}.hw.sidebar-collapsed{grid-template-columns:1fr}.side{position:fixed;top:0;left:0;bottom:0;width:272px;z-index:50;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,0.3);overflow-y:auto;overflow-x:hidden;padding:20px 14px}.side.open{transform:translateX(0)}.grid{grid-template-columns:1fr}.span2,.hero,.stats{grid-column:span 1}.stats{grid-template-columns:repeat(2,1fr)}.hero{flex-wrap:wrap}.count{margin-left:0}.search{width:auto;flex:1}.mobile-only{display:grid!important}.scrim{display:block}.side-close{display:grid}}
-.assist-close { display: none; position: absolute; top: 16px; right: 16px; }`;
+@media(min-width:861px){.hw.sidebar-collapsed{grid-template-columns:0px 1fr}.hw.sidebar-collapsed .side{padding:0;border-right-color:transparent}}
+@media(max-width:860px){.hw{grid-template-columns:1fr}.hw.sidebar-collapsed{grid-template-columns:1fr}.side{position:fixed;top:0;left:0;bottom:0;width:272px;z-index:50;transform:translateX(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,0.3);overflow-y:auto;overflow-x:hidden;padding:20px 14px}.side.open{transform:translateX(0)}.grid{grid-template-columns:1fr}.span2,.hero,.stats{grid-column:span 1}.stats{grid-template-columns:repeat(2,1fr)}.hero{flex-wrap:wrap}.count{margin-left:0}.search{width:auto;flex:1}.mobile-only{display:grid!important}.scrim{display:block}.side-close{display:grid}}`;
 
 /* ---------------------------- Mascot SVG ---------------------------- */
 function Mascot({ size = 24 }) {
@@ -584,20 +610,44 @@ function AuthView({ onAuthSuccess }) {
   );
 }
 
+/* ---------------------------- Fonts ---------------------------- */
+/* All fonts are pre-loaded via @font-face in the CSS string above — no CDN needed */
+const FONTS = [
+  { name: "Satoshi",         value: "Satoshi"         },
+  { name: "General Sans",    value: "General Sans"    },
+  { name: "Cabinet Grotesk", value: "Cabinet Grotesk" },
+  { name: "Switzer",         value: "Switzer"         },
+  { name: "Clash Display",   value: "Clash Display"   },
+  { name: "Synonym",         value: "Synonym"         },
+  { name: "Chillax",         value: "Chillax"         },
+  { name: "Inter",           value: "Inter"           },
+];
+
+function applyFont(font) {
+  // Fonts are local — just switch the CSS variable and persist the choice
+  document.documentElement.style.setProperty("--font-sans", `"${font.value}", system-ui, sans-serif`);
+  localStorage.setItem("workspace-font", font.value);
+}
+
 /* ---------------------------- Theme Picker ---------------------------- */
 function ThemePicker({ current, onChange }) {
   const [open, setOpen] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const [activeFont, setActiveFont] = useState(
+    () => localStorage.getItem("workspace-font") || "Inter"
+  );
   const btnRef = useRef(null);
   const panelRef = useRef(null);
 
-  const toggle = () => {
-    if (!open && btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 10, left: Math.min(r.left + r.width / 2, window.innerWidth - 130) });
+  // Restore saved font on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("workspace-font");
+    if (saved) {
+      const font = FONTS.find(f => f.value === saved);
+      if (font) applyFont(font);
     }
-    setOpen(o => !o);
-  };
+  }, []);
+
+  const toggle = () => setOpen(o => !o);
 
   useEffect(() => {
     if (!open) return;
@@ -609,27 +659,32 @@ function ThemePicker({ current, onChange }) {
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
+  const handleFontSelect = (font) => {
+    applyFont(font);
+    setActiveFont(font.value);
+  };
+
   return (
-    <>
+    <div style={{ position: "relative" }}>
       <button ref={btnRef} className="icon-btn" onClick={toggle} title="Change theme" style={{ background: open ? "var(--surface)" : undefined }}>
         <Palette size={16} />
       </button>
       {open && (
         <div ref={panelRef} style={{
-          position: "fixed", top: pos.top, left: pos.left, transform: "translateX(-50%)",
+          position: "absolute", top: "calc(100% + 8px)", left: 0, right: "auto",
           background: "var(--card)", border: "1px solid var(--border-strong)",
-          borderRadius: 14, padding: "16px 14px", zIndex: 1000, width: 244,
+          borderRadius: 14, padding: "16px 14px", zIndex: 1000, width: 280,
           boxShadow: "0 16px 40px rgba(0,0,0,0.5)",
         }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 14 }}>
-            Appearance
+            Theme
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8, marginBottom: 16 }}>
             {THEMES.map(t => {
               const active = current === t.id;
               const isLight = t.id === "light";
               return (
-                <button key={t.id} onClick={() => { onChange(t.id); setOpen(false); }}
+                <button key={t.id} onClick={() => { onChange(t.id); }}
                   title={t.label}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 7, background: "none", border: "none", cursor: "pointer", padding: "4px 2px", borderRadius: 8 }}>
                   <div style={{
@@ -676,9 +731,37 @@ function ThemePicker({ current, onChange }) {
               );
             })}
           </div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10 }}>
+            Font
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+            {FONTS.map(font => {
+              const active = activeFont === font.value;
+              return (
+                <button
+                  key={font.value}
+                  onClick={() => handleFontSelect(font)}
+                  style={{
+                    fontFamily: `"${font.value}", system-ui, sans-serif`,
+                    fontSize: 12,
+                    padding: "5px 10px",
+                    borderRadius: 6,
+                    border: active ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                    background: active ? "var(--primary-bg)" : "var(--surface)",
+                    color: active ? "var(--primary)" : "var(--text-secondary)",
+                    cursor: "pointer",
+                    transition: "border .15s, background .15s, color .15s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {font.name}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -905,21 +988,49 @@ export default function App() {
           }} />}
           {view === "github" && <GithubView github={data.github} />}
           {view === "email" && <EmailView email={data.email} />}
-          {view === "settings" && <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} />}
+          {view === "settings" && (
+            <SettingsErrorBoundary>
+              <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} />
+            </SettingsErrorBoundary>
+          )}
         </div>
       </main>
 
-      {/* ============ ASSISTANT ============ */}
-      <Assistant
-        className={assistOpen ? "open" : ""}
-        onClose={() => setAssistOpen(false)}
-        data={data} events={events} addEvent={addEvent} mode={mode}
-        unreadSlack={unreadSlack} unreadEmail={unreadEmail} todayEvents={todayEvents}
-        user={user}
-      />
-
-      {/* mobile assistant launcher */}
-      <button className="fab" onClick={() => setAssistOpen(true)}><Mascot size={34} /></button>
+      {/* ============ ASSISTANT FLOATING BUBBLE ============ */}
+      {!assistOpen && (
+        <button
+          onClick={() => setAssistOpen(true)}
+          title="Open assistant"
+          style={{
+            position: "fixed", bottom: 24, right: 24, zIndex: 1000,
+            width: 48, height: 48, borderRadius: "50%",
+            background: "var(--primary)", border: "none", cursor: "pointer",
+            display: "grid", placeItems: "center",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            color: "#fff", transition: "transform .15s, box-shadow .15s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.08)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)"; }}
+        >
+          <MessageCircle size={22} />
+        </button>
+      )}
+      {assistOpen && (
+        <div style={{
+          position: "fixed", bottom: 24, right: 24, zIndex: 1000,
+          width: 360, maxHeight: 500,
+          background: "var(--surface)", border: "1px solid var(--border)",
+          borderRadius: 16, display: "flex", flexDirection: "column",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.5)", overflow: "hidden",
+        }}>
+          <AssistantPanel
+            onClose={() => setAssistOpen(false)}
+            data={data} events={events} addEvent={addEvent} mode={mode}
+            unreadSlack={unreadSlack} unreadEmail={unreadEmail} todayEvents={todayEvents}
+            user={user}
+          />
+        </div>
+      )}
 
       {/* ============ ONBOARDING ============ */}
       {onboard && (
@@ -1533,9 +1644,27 @@ function EmailView() {
   );
 }
 
+/* ---------------------------- Settings Error Boundary ---------------------------- */
+class SettingsErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError)
+      return (
+        <div style={{ padding: 24, color: "var(--danger)" }}>
+          Settings failed to load. Try refreshing.
+        </div>
+      );
+    return this.props.children;
+  }
+}
+
 /* ---------------------------- Settings ---------------------------- */
 function SettingsView({ integrations, mode, onConnect }) {
   const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, i.connected])));
+  const [activeFont, setActiveFont] = useState(
+    () => localStorage.getItem("workspace-font") || "Inter"
+  );
   const live = mode === "live";
   const oauthIds = ["gh", "gcal", "email", "slack"];
 
@@ -1554,9 +1683,47 @@ function SettingsView({ integrations, mode, onConnect }) {
     }
   };
 
+  const handleFontSelect = (font) => {
+    applyFont(font);
+    setActiveFont(font.value);
+  };
+
   return (
     <div>
       <ViewHead title="Settings" sub="Manage your connected tools & workspace" />
+
+      {/* Appearance section */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Appearance</div>
+      <div className="card" style={{ marginBottom: 24, padding: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 12 }}>Font</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {FONTS.map(font => {
+            const active = activeFont === font.value;
+            return (
+              <button
+                key={font.value}
+                onClick={() => handleFontSelect(font)}
+                style={{
+                  fontFamily: `"${font.value}", system-ui, sans-serif`,
+                  fontSize: 13,
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  border: active ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                  background: active ? "var(--primary-bg)" : "var(--surface)",
+                  color: active ? "var(--primary)" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "border .15s, background .15s, color .15s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {font.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Integrations section */}
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Integrations</div>
       <div style={{ display: "grid", gap: 12 }}>
         {integrations.map((it) => {
@@ -1598,8 +1765,8 @@ function ViewHead({ title, sub, action }) {
   );
 }
 
-/* ---------------------------- Assistant ---------------------------- */
-function Assistant({ className, onClose, data, events, addEvent, mode, unreadSlack, unreadEmail, todayEvents, user }) {
+/* ---------------------------- Assistant Panel (floating) ---------------------------- */
+function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, unreadEmail, todayEvents, user }) {
   const name = `${user.full_name.split(' ')[0]}'s Assistant`;
   const [msgs, setMsgs] = useState([
     { role: "assistant", content: `Hi ${user.full_name.split(' ')[0]}! I'm your assistant. I keep an eye on your Slack, Calendar, GitHub and inbox so you don't have to tab-hop. Ask me what's happening today, or to create a meeting.` },
@@ -1688,17 +1855,37 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
   const quick = ["What's happening today?", "Any urgent emails?", "Who committed today?", "Meetings tomorrow?"];
 
   return (
-    <aside className={`assist ${className}`}>
-      <button className="icon-btn assist-close" onClick={onClose}><X size={18} /></button>
-      <div className="assist-h">
-        <Mascot size={42} />
-        <div className="who">
-          <div className="nm">{name} <Sparkles size={14} color="var(--primary-2)" /></div>
-          <div className="st"><span className="live"><i /></span> Online · synced just now</div>
+    <>
+      {/* Panel header */}
+      <div style={{
+        padding: "14px 16px",
+        borderBottom: "1px solid var(--border)",
+        display: "flex", alignItems: "center", gap: 10,
+        flex: "none",
+      }}>
+        <Mascot size={34} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontWeight: 500, fontSize: 14, display: "flex", alignItems: "center", gap: 6, color: "var(--text)" }}>
+            {name} <Sparkles size={13} color="var(--primary-2)" />
+          </div>
+          <div style={{ fontSize: 11, color: "var(--text-muted)", display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
+            <span className="live"><i /></span> Online · synced just now
+          </div>
         </div>
+        <button
+          onClick={onClose}
+          style={{
+            width: 28, height: 28, border: "1px solid var(--border)", borderRadius: 6,
+            background: "transparent", cursor: "pointer", display: "grid", placeItems: "center",
+            color: "var(--text-secondary)", flex: "none",
+          }}
+        >
+          <X size={15} />
+        </button>
       </div>
 
-      <div className="chat" ref={scrollRef}>
+      {/* Messages area — scrollable */}
+      <div className="chat" ref={scrollRef} style={{ flex: 1, overflowY: "auto", maxHeight: 300 }}>
         {msgs.map((m, i) => (
           <div key={i} className={`msg ${m.role === "user" ? "me" : "ai"}`}>
             {m.role === "assistant" && <div className="mini-mascot"><Mascot size={30} /></div>}
@@ -1709,11 +1896,11 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
           <div className="bub" style={{ padding: 0 }}><div className="typing"><i /><i /><i /></div></div></div>}
       </div>
 
-      <div className="quick">
+      <div className="quick" style={{ flex: "none" }}>
         {quick.map((q) => <button key={q} className="chip" onClick={() => send(q)} disabled={busy}>{q}</button>)}
       </div>
 
-      <div className="composer">
+      <div className="composer" style={{ flex: "none" }}>
         <div className="box">
           <textarea rows={1} value={input} placeholder={`Ask ${name}…`}
             onChange={(e) => setInput(e.target.value)}
@@ -1721,7 +1908,7 @@ function Assistant({ className, onClose, data, events, addEvent, mode, unreadSla
           <button className="send-btn" onClick={() => send()} disabled={busy || !input.trim()}><Send size={16} /></button>
         </div>
       </div>
-    </aside>
+    </>
   );
 }
 
