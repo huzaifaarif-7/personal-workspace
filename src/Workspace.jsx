@@ -537,7 +537,7 @@ function AuthView({ onAuthSuccess }) {
         throw new Error("An error occurred. Please try again.");
       }
       
-      onAuthSuccess();
+      onAuthSuccess(payload);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -623,10 +623,18 @@ const FONTS = [
   { name: "Inter",           value: "Inter"           },
 ];
 
-function applyFont(font) {
-  // Fonts are local — just switch the CSS variable and persist the choice
-  document.documentElement.style.setProperty("--font-sans", `"${font.value}", system-ui, sans-serif`);
-  localStorage.setItem("workspace-font", font.value);
+function applyPreferences(preferences) {
+  if (preferences.theme) {
+    document.documentElement.setAttribute("data-theme", preferences.theme);
+    localStorage.setItem("theme", preferences.theme);
+  }
+  if (preferences.font) {
+    const font = FONTS.find(f => f.value === preferences.font);
+    if (font) {
+      document.documentElement.style.setProperty("--font-sans", `"${font.value}", system-ui, sans-serif`);
+      localStorage.setItem("workspace-font", font.value);
+    }
+  }
 }
 
 /* ---------------------------- Theme Picker ---------------------------- */
@@ -637,15 +645,6 @@ function ThemePicker({ current, onChange }) {
   );
   const btnRef = useRef(null);
   const panelRef = useRef(null);
-
-  // Restore saved font on mount
-  useEffect(() => {
-    const saved = localStorage.getItem("workspace-font");
-    if (saved) {
-      const font = FONTS.find(f => f.value === saved);
-      if (font) applyFont(font);
-    }
-  }, []);
 
   const toggle = () => setOpen(o => !o);
 
@@ -660,8 +659,14 @@ function ThemePicker({ current, onChange }) {
   }, [open]);
 
   const handleFontSelect = (font) => {
-    applyFont(font);
+    applyPreferences({ font: font.value });
     setActiveFont(font.value);
+    if (API_BASE) {
+      fetch(`${API_BASE}/preferences`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        credentials: "include", body: JSON.stringify({ font: font.value })
+      }).catch(() => {});
+    }
   };
 
   return (
@@ -768,15 +773,30 @@ function ThemePicker({ current, onChange }) {
 /* =========================================================================
    APP
    ========================================================================= */
+const initTheme = localStorage.getItem('theme') || 'dark';
+document.documentElement.setAttribute('data-theme', initTheme);
+const initFont = localStorage.getItem('workspace-font');
+if (initFont) {
+  const fontObj = FONTS.find(f => f.value === initFont);
+  if (fontObj) document.documentElement.style.setProperty("--font-sans", `"${fontObj.value}", system-ui, sans-serif`);
+}
+
 export default function App() {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
-  useEffect(() => {
-    localStorage.setItem('theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
+  const [theme, setTheme] = useState(initTheme);
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+    applyPreferences({ theme: newTheme });
+    if (API_BASE) {
+      fetch(`${API_BASE}/preferences`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        credentials: "include", body: JSON.stringify({ theme: newTheme })
+      }).catch(() => {});
+    }
+  };
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const [user, setUser] = useState(null);
+  const [connections, setConnections] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   const [data, setData] = useState(() => buildData());
@@ -798,10 +818,16 @@ export default function App() {
       const r = await fetch(`${API_BASE}/me`, { credentials: "include" });
       const payload = await r.json();
       if (payload.authenticated) {
+        if (payload.preferences) {
+          applyPreferences(payload.preferences);
+          if (payload.preferences.theme) setTheme(payload.preferences.theme);
+        }
+        if (payload.connections) setConnections(payload.connections);
         setUser(payload);
         fetchDashboardData();
       } else {
         setUser(null);
+        setConnections(null);
         setOnboard(false);
         setAuthLoading(false);
       }
@@ -853,7 +879,19 @@ export default function App() {
     return (
       <>
         <style>{CSS}</style>
-        <AuthView onAuthSuccess={checkAuth} />
+        <AuthView onAuthSuccess={(payload) => {
+          if (payload && payload.authenticated) {
+            if (payload.preferences) {
+              applyPreferences(payload.preferences);
+              if (payload.preferences.theme) setTheme(payload.preferences.theme);
+            }
+            if (payload.connections) setConnections(payload.connections);
+            setUser(payload);
+            fetchDashboardData();
+          } else {
+            checkAuth();
+          }
+        }} />
       </>
     );
   }
@@ -953,7 +991,7 @@ export default function App() {
         <header className="topbar">
           <button className="icon-btn" onClick={() => window.innerWidth <= 860 ? setNavOpen(true) : setSidebarCollapsed(c => !c)} title="Toggle sidebar"><Menu size={18} /></button>
 
-          <ThemePicker current={theme} onChange={setTheme} />
+          <ThemePicker current={theme} onChange={handleThemeChange} />
           { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
             {/* { <p>{dateStr} · Here's everything across your workspace</p>} */}
@@ -979,18 +1017,19 @@ export default function App() {
 
         <div className="scroll">
           {view === "dashboard" && <Dashboard data={data} events={events} todayEvents={todayEvents}
-            unreadSlack={unreadSlack} unreadEmail={unreadEmail} onNewEvent={() => setNewEvent(true)} go={go} onConnect={liveConnect} />}
+            unreadSlack={unreadSlack} unreadEmail={unreadEmail} onNewEvent={() => setNewEvent(true)} go={go} onConnect={liveConnect} connections={connections} />}
           {view === "calendar" && <CalendarView events={events} onNew={() => setNewEvent(true)} />}
-          {view === "messages" && <MessagesView slack={data.slack} slackConnected={data.integrations.find((i) => i.id === "slack")?.connected} onConnect={liveConnect} onDisconnect={() => {
+          {view === "messages" && <MessagesView slack={data.slack} slackConnected={connections?.slack?.connected} onConnect={liveConnect} onDisconnect={() => {
             if (API_BASE && mode === "live") {
-              fetch(`${API_BASE}/auth/slack/disconnect`, { method: "POST", credentials: "include" }).then(() => window.location.reload());
+              fetch(`${API_BASE}/auth/slack/disconnect`, { method: "POST", credentials: "include" })
+                .then(() => setConnections(p => ({ ...p, slack: { connected: false } })));
             }
           }} />}
-          {view === "github" && <GithubView github={data.github} />}
-          {view === "email" && <EmailView email={data.email} />}
+          {view === "github" && <GithubView github={data.github} connections={connections} setConnections={setConnections} />}
+          {view === "email" && <EmailView email={data.email} connections={connections} setConnections={setConnections} />}
           {view === "settings" && (
             <SettingsErrorBoundary>
-              <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} />
+              <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections} />
             </SettingsErrorBoundary>
           )}
         </div>
@@ -1048,12 +1087,12 @@ export default function App() {
 }
 
 /* ---------------------------- Dashboard ---------------------------- */
-function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go, onConnect }) {
+function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go, onConnect, connections }) {
   const { next, text } = useCountdown(events);
-  const slackConnected = data.integrations.find((i) => i.id === "slack")?.connected;
-  const gcalConnected = data.integrations.find((i) => i.id === "gcal")?.connected;
-  const ghConnected = data.integrations.find((i) => i.id === "gh")?.connected;
-  const emailConnected = data.integrations.find((i) => i.id === "email")?.connected;
+  const slackConnected = connections?.slack?.connected;
+  const gcalConnected = connections?.calendar?.connected;
+  const ghConnected = connections?.github?.connected;
+  const emailConnected = connections?.email?.connected;
   const stats = [
     { n: unreadSlack, l: "Slack mentions", ic: AtSign, c: "var(--slack)" },
     { n: todayEvents.length, l: "Meetings today", ic: Calendar, c: "var(--gcal)" },
@@ -1334,70 +1373,40 @@ function MessagesView({ slack, slackConnected, onConnect, onDisconnect }) {
 }
 
 /* ---------------------------- GitHub view ---------------------------- */
-function GithubView() {
-  const [status, setStatus] = useState("loading"); // loading, connected, disconnected, rate_limited, error
+function GithubView({ connections, setConnections }) {
+  const connected = connections?.github?.connected;
+  const [status, setStatus] = useState(connected ? "loading" : "disconnected"); // loading, connected, disconnected, rate_limited, error
   const [data, setData] = useState(null);
-
-  const checkStatus = () => {
-    setStatus("loading");
-    fetch(`${API_BASE}/github/status`, { credentials: "include" })
-      .then(r => r.json())
-      .then(res => {
-        if (res.connected) {
-          fetch(`${API_BASE}/github/summary`, { credentials: "include" })
-            .then(r => {
-              if (r.status === 401) { setStatus("disconnected"); return null; }
-              if (r.status === 429) { setStatus("rate_limited"); return null; }
-              if (!r.ok) throw new Error("bad status");
-              return r.json();
-            })
-            .then(summary => {
-              if (summary) { setData(summary); setStatus("connected"); }
-            })
-            .catch(() => setStatus("error"));
-        } else {
-          setStatus("disconnected");
-        }
-      })
-      .catch(() => setStatus("error"));
-  };
 
   useEffect(() => {
     if (!API_BASE) return;
     let alive = true;
-    setStatus("loading");
-    fetch(`${API_BASE}/github/status`, { credentials: "include" })
-      .then(r => r.json())
-      .then(res => {
-        if (!alive) return;
-        if (res.connected) {
-          fetch(`${API_BASE}/github/summary`, { credentials: "include" })
-            .then(r => {
-              if (!alive) return null;
-              if (r.status === 401) { setStatus("disconnected"); return null; }
-              if (r.status === 429) { setStatus("rate_limited"); return null; }
-              if (!r.ok) throw new Error("bad status");
-              return r.json();
-            })
-            .then(summary => {
-              if (alive && summary) { setData(summary); setStatus("connected"); }
-            })
-            .catch(() => { if (alive) setStatus("error"); });
-        } else {
-          setStatus("disconnected");
-        }
-      })
-      .catch(() => { if (alive) setStatus("error"); });
+    if (connected) {
+      setStatus("loading");
+      fetch(`${API_BASE}/github/summary`, { credentials: "include" })
+        .then(r => {
+          if (!alive) return null;
+          if (r.status === 401) { setStatus("disconnected"); setConnections(p => ({ ...p, github: { connected: false } })); return null; }
+          if (r.status === 429) { setStatus("rate_limited"); return null; }
+          if (!r.ok) throw new Error("bad status");
+          return r.json();
+        })
+        .then(summary => {
+          if (alive && summary) { setData(summary); setStatus("connected"); }
+        })
+        .catch(() => { if (alive) setStatus("error"); });
+    } else {
+      setStatus("disconnected");
+    }
     return () => { alive = false; };
-  }, []);
+  }, [connected, setConnections]);
 
   const disconnect = () => {
     setStatus("loading");
     fetch(`${API_BASE}/auth/github/disconnect`, { method: "POST", credentials: "include" })
-      .then(() => checkStatus())
-      .catch(() => checkStatus());
+      .then(() => setConnections(p => ({ ...p, github: { connected: false } })))
+      .catch(() => setConnections(p => ({ ...p, github: { connected: false } })));
   };
-
   const connect = () => {
     window.location.href = `${API_BASE}/auth/github/login`;
   };
@@ -1514,69 +1523,39 @@ function GithubView() {
 }
 
 /* ---------------------------- Email view ---------------------------- */
-function EmailView() {
-  const [status, setStatus] = useState("loading"); // loading, connected, disconnected, error
+function EmailView({ connections, setConnections }) {
+  const connected = connections?.email?.connected;
+  const emailAddress = connections?.email?.email_address;
+  const [status, setStatus] = useState(connected ? "loading" : "disconnected"); // loading, connected, disconnected, error
   const [data, setData] = useState(null);
-  const [emailAddress, setEmailAddress] = useState(null);
-
-  const checkStatus = () => {
-    setStatus("loading");
-    fetch(`${API_BASE}/email/status`, { credentials: "include" })
-      .then(r => r.json())
-      .then(res => {
-        if (res.connected) {
-          setEmailAddress(res.email_address);
-          fetch(`${API_BASE}/email/messages`, { credentials: "include" })
-            .then(r => {
-              if (r.status === 401) { setStatus("disconnected"); return null; }
-              if (!r.ok) throw new Error("bad status");
-              return r.json();
-            })
-            .then(payload => {
-              if (payload) { setData(payload); setStatus("connected"); }
-            })
-            .catch(() => setStatus("error"));
-        } else {
-          setStatus("disconnected");
-        }
-      })
-      .catch(() => setStatus("error"));
-  };
 
   useEffect(() => {
     if (!API_BASE) return;
     let alive = true;
-    setStatus("loading");
-    fetch(`${API_BASE}/email/status`, { credentials: "include" })
-      .then(r => r.json())
-      .then(res => {
-        if (!alive) return;
-        if (res.connected) {
-          setEmailAddress(res.email_address);
-          fetch(`${API_BASE}/email/messages`, { credentials: "include" })
-            .then(r => {
-              if (!alive) return null;
-              if (r.status === 401) { setStatus("disconnected"); return null; }
-              if (!r.ok) throw new Error("bad status");
-              return r.json();
-            })
-            .then(payload => {
-              if (alive && payload) { setData(payload); setStatus("connected"); }
-            })
-            .catch(() => { if (alive) setStatus("error"); });
-        } else {
-          setStatus("disconnected");
-        }
-      })
-      .catch(() => { if (alive) setStatus("error"); });
+    if (connected) {
+      setStatus("loading");
+      fetch(`${API_BASE}/email/messages`, { credentials: "include" })
+        .then(r => {
+          if (!alive) return null;
+          if (r.status === 401) { setStatus("disconnected"); setConnections(p => ({ ...p, email: { connected: false } })); return null; }
+          if (!r.ok) throw new Error("bad status");
+          return r.json();
+        })
+        .then(payload => {
+          if (alive && payload) { setData(payload); setStatus("connected"); }
+        })
+        .catch(() => { if (alive) setStatus("error"); });
+    } else {
+      setStatus("disconnected");
+    }
     return () => { alive = false; };
-  }, []);
+  }, [connected, setConnections]);
 
   const disconnect = () => {
     setStatus("loading");
     fetch(`${API_BASE}/auth/google/disconnect`, { method: "POST", credentials: "include" })
-      .then(() => checkStatus())
-      .catch(() => checkStatus());
+      .then(() => setConnections(p => ({ ...p, email: { connected: false } })))
+      .catch(() => setConnections(p => ({ ...p, email: { connected: false } })));
   };
 
   const connect = () => {
@@ -1660,8 +1639,7 @@ class SettingsErrorBoundary extends React.Component {
 }
 
 /* ---------------------------- Settings ---------------------------- */
-function SettingsView({ integrations, mode, onConnect }) {
-  const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, i.connected])));
+function SettingsView({ integrations, mode, onConnect, connections, setConnections }) {
   const [activeFont, setActiveFont] = useState(
     () => localStorage.getItem("workspace-font") || "Inter"
   );
@@ -1669,23 +1647,32 @@ function SettingsView({ integrations, mode, onConnect }) {
   const oauthIds = ["gh", "gcal", "email", "slack"];
 
   const handleDisconnect = (itId) => {
+    const internalToApi = { gh: "github", gcal: "google", email: "google", slack: "slack" };
+    const internalToConnections = { gh: "github", gcal: "calendar", email: "email", slack: "slack" };
+    
     if (!live) {
-      setConn((p) => ({ ...p, [itId]: false }));
+      setConnections((p) => ({ ...p, [internalToConnections[itId]]: { connected: false } }));
       return;
     }
-    const path = { gh: "github", gcal: "google", email: "google", slack: "slack" }[itId];
+    const path = internalToApi[itId];
     if (path && API_BASE) {
       fetch(`${API_BASE}/auth/${path}/disconnect`, { method: "POST", credentials: "include" })
-        .then(() => setConn((p) => ({ ...p, [itId]: false })))
+        .then(() => setConnections((p) => ({ ...p, [internalToConnections[itId]]: { connected: false } })))
         .catch(() => {});
     } else {
-      setConn((p) => ({ ...p, [itId]: false }));
+      setConnections((p) => ({ ...p, [internalToConnections[itId]]: { connected: false } }));
     }
   };
 
   const handleFontSelect = (font) => {
-    applyFont(font);
+    applyPreferences({ font: font.value });
     setActiveFont(font.value);
+    if (API_BASE) {
+      fetch(`${API_BASE}/preferences`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        credentials: "include", body: JSON.stringify({ font: font.value })
+      }).catch(() => {});
+    }
   };
 
   return (
@@ -1727,11 +1714,13 @@ function SettingsView({ integrations, mode, onConnect }) {
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Integrations</div>
       <div style={{ display: "grid", gap: 12 }}>
         {integrations.map((it) => {
-          const Ic = intIcon[it.id]; const on = conn[it.id];
+          const internalToConnections = { gh: "github", gcal: "calendar", email: "email", slack: "slack" };
+          const Ic = intIcon[it.id]; 
+          const on = connections?.[internalToConnections[it.id]]?.connected;
           const isOauth = oauthIds.includes(it.id);
           const handleConnect = () => {
             if (live && isOauth) { onConnect(it.id); return; }   // → /api/auth/{provider}/login
-            setConn((p) => ({ ...p, [it.id]: true }));
+            setConnections((p) => ({ ...p, [internalToConnections[it.id]]: { connected: true } }));
           };
           return (
             <div className="conn-card" key={it.id}>
