@@ -16,15 +16,35 @@ Usage in a route:
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
+import os
+
 # File-based SQLite at the repo root.  The path is relative to wherever the
 # process is started (normally the repo root when running uvicorn).
-DATABASE_URL = "sqlite:///./dashboard.db"
+# On Vercel, VERCEL env var is automatically set; /tmp is the only writable dir.
+# Check for Vercel Postgres or Supabase
+if os.environ.get("POSTGRES_URL"):
+    db_url = os.environ.get("POSTGRES_URL")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = db_url
+elif os.environ.get("DATABASE_URL"):
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = db_url
+elif os.environ.get("VERCEL") or os.environ.get("AWS_EXECUTION_ENV") or os.path.exists("/var/task"):
+    # Serverless environments (Vercel/AWS Lambda) have a read-only filesystem except for /tmp
+    DATABASE_URL = "sqlite:////tmp/dashboard.db"
+else:
+    DATABASE_URL = "sqlite:///./dashboard.db"
+
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 # `check_same_thread=False` is required for SQLite when the same connection
 # object may be used across threads (FastAPI uses a thread-pool executor).
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False},
+    connect_args=connect_args,
     # Echo SQL to stdout — flip to True when troubleshooting queries.
     echo=False,
 )
@@ -37,6 +57,28 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Every ORM model inherits from Base so SQLAlchemy can track them collectively
 # and create/drop all tables via Base.metadata.create_all(engine).
 Base = declarative_base()
+
+
+def _init_db() -> None:
+    """Create all ORM tables at import time.
+
+    IMPORTANT: On Vercel serverless, @app.on_event('startup') handlers are NOT
+    guaranteed to run before the first request.  Tables must be created here, at
+    module level, so they exist for every cold-start invocation.
+
+    Import models inside this function to avoid circular imports — models.py
+    imports Base from this module, so importing models at the top of this module
+    would create a cycle.  The local import is fine; Python caches modules.
+    """
+    import logging
+    import server.models  # noqa: F401 — registers User, GitHubConnection, EmailConnection
+    Base.metadata.create_all(bind=engine)
+    logging.getLogger("workspace").info(
+        "[database] Tables verified / created at: %s", DATABASE_URL
+    )
+
+
+_init_db()
 
 
 def get_db():

@@ -17,7 +17,7 @@ from . import schemas
 from .config import get_settings
 from . import mock_data, store
 from .crypto import decrypt_token
-from .models import EmailConnection, GitHubConnection, User
+from .models import EmailConnection, GitHubConnection, SlackConnection, User
 from ._util import ago, parse_iso
 
 log = logging.getLogger("workspace")
@@ -39,8 +39,9 @@ def status() -> dict[str, bool]:
 def status_for_user(db: Session, user_id: int) -> dict[str, bool]:
     gh = db.query(GitHubConnection).filter(GitHubConnection.user_id == user_id).first()
     em = db.query(EmailConnection).filter(EmailConnection.user_id == user_id).first()
+    sl = db.query(SlackConnection).filter(SlackConnection.user_id == user_id).first()
     return {
-        "slack": bool(settings.slack_user_token),
+        "slack": sl is not None,
         "gcal": store.has("google"),
         "calendly": bool(settings.calendly_token),
         "github": gh is not None,
@@ -58,12 +59,19 @@ def _try(provider: str, fn, fallback):
 
 
 # ---------- per integration ----------
-def slack_messages() -> list[schemas.SlackMessage]:
-    if not settings.slack_user_token:
+def slack_messages_for_user(db: Session, user_id: int) -> list[schemas.SlackMessage]:
+    conn = db.query(SlackConnection).filter(SlackConnection.user_id == user_id).first()
+    token = None
+    if conn:
+        token = decrypt_token(conn.access_token_encrypted)
+        
+    if not token:
         return mock_data.slack_messages()
+    
     def live():
         from . import slack
-        return slack.messages(settings.slack_user_token)
+        return slack.messages(token)
+        
     msgs = _try("slack", live, mock_data.slack_messages)
     return msgs or mock_data.slack_messages()
 
@@ -177,7 +185,7 @@ INTEGRATION_META = {
 
 async def dashboard_payload(user: User, db: Session) -> dict:
     st = status_for_user(db, user.id)
-    slack = slack_messages()
+    slack = slack_messages_for_user(db, user.id) if st["slack"] else []
     cal = calendar_events()
     cly = calendly_overview()
     gh = github_activity_for_user(db, user.id) if st["github"] else []

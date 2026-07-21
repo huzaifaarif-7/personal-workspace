@@ -1,0 +1,46 @@
+10:    Huzaifa's Workspace — AI-powered personal productivity command center
+321:         { id: 2, channel: "#engineering", from: "Sara Khan", text: `@${userName.split(' ')[0]} the API rate-limit fix is deployed to staging 🎉`, time: "41m", unread: true },
+322:         { id: 3, channel: "#design", from: "Bilal", text: `@${userName.split(' ')[0]} loved the new dashboard mocks — shipping today?`, time: "2h", unread: false },
+335:       { id: "c6", title: "Client Demo — Acme", start: at(14, 0, 1), end: at(14, 45, 1), priority: "high", location: "Zoom", attendees: 4 },
+341:         { id: "b1", name: "Intro Call", with: "Daniel Wright", time: "Tomorrow · 1:00 PM", type: "30 min" },
+342:         { id: "b2", name: "Product Walkthrough", with: "Priya Nair", time: "Thu · 4:30 PM", type: "45 min" },
+343:         { id: "b3", name: "Discovery Call", with: "Tom Becker", time: "Fri · 11:00 AM", type: "30 min" },
+354:       { id: "e2", from: "Daniel Wright", subject: "Re: Partnership proposal", preview: "Thanks for the deck — the team is excited. Can we lock a call this week?", time: "47m", unread: true, important: true },
+357:       { id: "e5", from: "Ayesha Malik", subject: "1:1 agenda for today", preview: "Adding a couple of items — career growth + Q3 priorities.", time: "5h", unread: false, important: false },
+387:   if (!next) return { next: null, text: "—" };
+395:    API LAYER — talks to the FastAPI backend; falls back to demo data offline
+399:   "/api";   // relative path → routes through the Vite dev server proxy to localhost:8000
+612:   // Auth → Dashboard (with onboarding overlay for first-time users)
+617:         <div style={{ display: "grid", placeItems: "center", height: "100vh", color: "var(--dim)", background: "var(--bg)" }}>Loading…</div>
+725:             <h1 className="hw-display">{greeting}, {user.full_name.split(' ')[0]} 👋</h1>
+726:             <p>{dateStr} · Here's everything across your workspace</p>
+730:             <input placeholder="Search messages, events, repos…" />
+732:           <div title={mode === "live" ? "Connected to your backend — showing live data"
+733:               : mode === "loading" ? "Connecting to backend…"
+734:               : "Backend not reachable — showing demo data"}
+803:           <h2 className="hw-display">{next ? next.title : "You're all clear 🎉"}</h2>
+884:               <div className="text">{g.action} to <b>{g.repo}</b> — {g.message}</div>
+909:               <div className="text"><b>{e.subject}</b> — {e.preview}</div>
+914:             {emailConnected ? "No new emails 🎉" : "Connect Gmail in Settings to see your inbox here"}
+994:             {new Date(day).toDateString() === new Date().toDateString() ? "Today · " : ""}
+1182:             {renderList(data.notifications, "Notifications", <Bell size={15} color="var(--amber)" />, "No new notifications 🎉", (n) => (
+1357:                   <b style={{ color: e.unread ? "#fff" : "inherit" }}>{e.subject}</b> — {e.snippet}
+1365:             <div style={{ color: "var(--faint)", fontSize: 13, textAlign: "center", padding: "10px 0" }}>No new emails 🎉</div>
+1387:             if (live && isOauth) { onConnect(it.id); return; }   // → /api/auth/{provider}/login
+1397:                 <div style={{ fontSize: 12, color: "var(--dim)" }}>{it.desc}{live && it.id === "cly" ? " · token" : ""}{live && it.id === "slack" ? " · token" : ""}</div>
+1426:     { role: "assistant", content: `Hi ${user.full_name.split(' ')[0]}! 👋 I'm your assistant. I keep an eye on your Slack, Calendar, GitHub and inbox so you don't have to tab-hop. Ask me what's happening today, or to create a meeting.` },
+1451:       return `You have ${c.email.important.length} important email${c.email.important.length !== 1 ? "s" : ""}:\n${c.email.important.map((e) => `• ${e.from} — ${e.subject}`).join("\n")}`;
+1453:       return `You've got ${c.email.unread} unread emails, ${c.email.important.length} marked important — most notably from ${c.email.important.map((e) => e.from).join(" and ")}.`;
+1455:       return `Recent GitHub activity:\n${c.github.slice(0, 3).map((g) => `• ${g.who} ${g.what} to ${g.repo} (${g.when} ago)`).join("\n")}`;
+1457:       return c.calendar_tomorrow.length ? `Tomorrow you have ${c.calendar_tomorrow.length} meetings:\n${c.calendar_tomorrow.map((e) => `• ${e.time} — ${e.title}`).join("\n")}` : "Your calendar is clear tomorrow — nice 🎉";
+1459:       return `You were mentioned by ${c.slack.mentions.map((m) => m.from).join(", ")}.\nMost recent: ${c.slack.mentions[0].from} in ${c.slack.mentions[0].channel} — "${c.slack.mentions[0].text}"`;
+1466:       return `Done ✅ I've added "New Meeting" to your calendar for ${tomorrow ? "tomorrow" : "today"} at ${fmtTime(d)} with a Google Meet link. You can rename it from the Calendar tab.`;
+1470:         ? `• ${c.github[0].who} pushed updates to ${c.github[0].repo}`
+1471:         : "• No recent GitHub activity";
+1472:       return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]} 👋\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n${ghLine}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
+1474:     return `I can summarize your day, check Slack mentions, urgent emails, GitHub activity, or tomorrow's meetings — and I can create events for you. Try "What's happening today?"`;
+1518:           <div className="st"><span className="live"><i /></span> Online · synced just now</div>
+1539:           <textarea rows={1} value={input} placeholder={`Ask ${name}…`}
+1567:                 <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {user.full_name.split(' ')[0]} 👋</h2>
+1582:             Stop tab-hopping between Slack, Calendar, Calendly, GitHub and email. Connect them once and get a single, intelligent overview — plus an AI assistant that summarizes your whole day in seconds.
+1613:             Your dashboard is ready. Your assistant is standing by on the right — try asking <b style={{ color: "var(--text)" }}>"What's happening today?"</b>

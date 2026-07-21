@@ -54,6 +54,9 @@ class User(Base):
     email_connection = relationship(
         "EmailConnection", back_populates="user", uselist=False
     )
+    slack_connection = relationship(
+        "SlackConnection", back_populates="user", uselist=False
+    )
 
     def __repr__(self) -> str:
         return f"<User id={self.id} full_name={self.full_name!r}>"
@@ -154,4 +157,40 @@ class EmailConnection(Base):
             f"<EmailConnection id={self.id} "
             f"user_id={self.user_id} "
             f"email_address={self.email_address!r}>"
+        )
+
+
+# ---------------------------------------------------------------------------
+# SlackConnection
+# ---------------------------------------------------------------------------
+
+class SlackConnection(Base):
+    """Stores a user's Slack OAuth tokens (encrypted) and metadata."""
+    __tablename__ = "slack_connections"
+
+    __table_args__ = (
+        UniqueConstraint("user_id", name="uq_slack_connections_user_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    slack_user_id = Column(String(255), nullable=False)
+    access_token_encrypted = Column(Text, nullable=False)
+    connected_at = Column(
+        DateTime(timezone=True), nullable=False, default=_utcnow
+    )
+
+    user = relationship("User", back_populates="slack_connection")
+
+    def __repr__(self) -> str:
+        return (
+            f"<SlackConnection id={self.id} "
+            f"user_id={self.user_id} "
+            f"slack_user_id={self.slack_user_id!r}>"
         )

@@ -30,7 +30,7 @@ Security notes
 import os
 
 from cryptography.fernet import Fernet, InvalidToken
-from passlib.context import CryptContext
+import bcrypt
 
 # ---------------------------------------------------------------------------
 # Key loading — hard-fail if missing
@@ -40,7 +40,7 @@ from passlib.context import CryptContext
 from .config import get_settings
 
 settings = get_settings()
-_raw_key = settings.token_encryption_key
+_raw_key = (settings.token_encryption_key or "").strip()
 if not _raw_key:
     raise RuntimeError(
         "TOKEN_ENCRYPTION_KEY environment variable is not set.\n"
@@ -54,7 +54,8 @@ try:
     _fernet = Fernet(_raw_key.encode())
 except Exception as exc:
     raise RuntimeError(
-        f"TOKEN_ENCRYPTION_KEY is set but is not a valid Fernet key: {exc}\n"
+        f"TOKEN_ENCRYPTION_KEY is invalid or malformed: {exc}\n"
+        "Common causes: leading/trailing whitespace, wrong length, or bad base64 padding.\n"
         "Regenerate it with:\n"
         "  python -c \"from cryptography.fernet import Fernet; "
         "print(Fernet.generate_key().decode())\""
@@ -116,12 +117,17 @@ def decrypt_token(token: str) -> str:
 # Password hashing
 # ---------------------------------------------------------------------------
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 def hash_password(plain_password: str) -> str:
     """Hashes a plaintext password using bcrypt."""
-    return pwd_context.hash(plain_password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(plain_password.encode("utf-8"), salt).decode("utf-8")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plaintext password against a hashed one."""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), 
+            hashed_password.encode("utf-8")
+        )
+    except (ValueError, TypeError):
+        return False

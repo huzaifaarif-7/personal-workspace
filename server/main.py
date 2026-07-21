@@ -9,12 +9,13 @@ services/ subdirectories on disk.  Only the four modules that define an APIRoute
 github, calendly, assistant, google) are pure service/client modules.
 """
 import logging
+import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config import get_settings
-from .database import Base, engine                        # for create_all on startup
+from .database import Base, engine                        # tables created at import time in database._init_db()
 from .github_routes import (                              # new GitHub OAuth + data routes
     auth_router as gh_auth_router,
     github_router as gh_github_router,
@@ -23,12 +24,19 @@ from .google_routes import (                              # new Google OAuth + d
     auth_router as go_auth_router,
     google_router as go_google_router,
 )
+from .slack_routes import (
+    auth_router as slack_auth_router,
+    slack_router,
+)
 from .auth_routes import (                                # new User Auth routes
     auth_router as local_auth_router,
     user_router as local_user_router,
 )
 # Route modules — only import modules that define `router = APIRouter(...)`
 from . import dashboard, calendar
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 logging.basicConfig(level=logging.INFO)
 settings = get_settings()
@@ -39,6 +47,22 @@ app = FastAPI(
                 "Gmail and an AI assistant. Live data with graceful demo fallback.",
     docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/openapi.json",
 )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc):
+    if isinstance(exc, StarletteHTTPException):
+        content = exc.detail if isinstance(exc.detail, dict) else {"detail": exc.detail}
+        return JSONResponse(status_code=exc.status_code, content=content)
+    if isinstance(exc, RequestValidationError):
+        return JSONResponse(status_code=422, content={"detail": exc.errors()})
+
+    logging.getLogger("workspace").exception("Unhandled exception:")
+    return JSONResponse(
+        status_code=500,
+        content={"error": "internal_server_error"}
+    )
+
 
 # ── Middleware ───────────────────────────────────────────────────────────────
 # SessionMiddleware MUST be added before CORSMiddleware so that session data
@@ -60,6 +84,33 @@ app.add_middleware(
     allow_credentials=True, allow_methods=["*"], allow_headers=["*"],
 )
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+import slowapi
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "connect-src 'self' https://api.github.com https://gmail.googleapis.com"
+        )
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+from .auth_routes import limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
 # ── Routers ───────────────────────────────────────────────────────────────────
 # Legacy routes (dashboard aggregate, calendar)
 for r in (dashboard, calendar):
@@ -77,25 +128,16 @@ app.include_router(go_google_router, prefix=settings.api_prefix)
 app.include_router(local_auth_router, prefix=settings.api_prefix)
 app.include_router(local_user_router, prefix=settings.api_prefix)
 
+# Slack OAuth + data routes
+app.include_router(slack_auth_router, prefix=settings.api_prefix)
+app.include_router(slack_router, prefix=settings.api_prefix)
+
 
 # ── Startup ───────────────────────────────────────────────────────────────────
-@app.on_event("startup")
-def _create_tables() -> None:
-    """Create all ORM tables on startup if they don't exist yet.
-
-    Using create_all() is appropriate while there is no Alembic migration
-    history.  Once you introduce Alembic, remove this call and run
-    `alembic upgrade head` instead.
-
-    Importing models here (not at module level) avoids circular imports
-    while still ensuring all Table objects are registered on Base.metadata
-    before create_all() is called.
-    """
-    import server.models  # noqa: F401 — registers User, GitHubConnection, EmailConnection
-    Base.metadata.create_all(bind=engine)
-    logging.getLogger("workspace").info(
-        "Database tables verified / created (dashboard.db)"
-    )
+# NOTE: Base.metadata.create_all() is called at module-import time in
+# server/database.py (_init_db).  On Vercel serverless, @app.on_event("startup")
+# handlers are NOT guaranteed to fire before the first request arrives, so we
+# must not rely on them for table creation.  No startup event handler needed.
 
 
 @app.get("/api/health", tags=["meta"])
