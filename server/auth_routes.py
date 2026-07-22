@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from .crypto import hash_password, verify_password
 from .database import get_db
-from .models import User
+from .deps import get_current_user
+from .models import User, UserPreferences
 
 log = logging.getLogger(__name__)
 
@@ -27,6 +28,38 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1, max_length=128)
+
+class PreferencesRequest(BaseModel):
+    theme: str | None = None
+    font: str | None = None
+
+def _serialize_user(user: User) -> dict[str, Any]:
+    prefs = {"theme": "dark", "font": "Inter"}
+    if user.preferences:
+        prefs = {"theme": user.preferences.theme, "font": user.preferences.font}
+        
+    return {
+        "id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "preferences": prefs,
+        "connections": {
+            "github": {
+                "connected": user.github_connection is not None,
+                "username": user.github_connection.github_username if user.github_connection else None,
+            },
+            "email": {
+                "connected": user.email_connection is not None,
+                "email_address": user.email_connection.email_address if user.email_connection else None,
+            },
+            "slack": {
+                "connected": user.slack_connection is not None,
+            },
+            "calendar": {
+                "connected": user.calendar_connection is not None,
+            }
+        }
+    }
 
 @auth_router.post("/signup")
 @limiter.limit("3/minute")
@@ -76,11 +109,8 @@ def signup(req: SignupRequest, request: Request, db: Session = Depends(get_db)) 
     request.session["user_id"] = user.id
 
     log.info("signup: complete for user_id=%s", user.id)
-    return {
-        "id": user.id,
-        "full_name": user.full_name,
-        "email": user.email,
-    }
+    log.info("signup: complete for user_id=%s", user.id)
+    return _serialize_user(user)
 
 @auth_router.post("/login")
 @limiter.limit("5/minute")
@@ -114,11 +144,8 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)) ->
     request.session["user_id"] = user.id
 
     log.info("login: complete for user_id=%s", user.id)
-    return {
-        "id": user.id,
-        "full_name": user.full_name,
-        "email": user.email,
-    }
+    log.info("login: complete for user_id=%s", user.id)
+    return _serialize_user(user)
 
 @auth_router.post("/logout")
 def logout(request: Request) -> dict[str, Any]:
@@ -137,7 +164,34 @@ def get_me(request: Request, db: Session = Depends(get_db)) -> dict[str, Any]:
         
     return {
         "authenticated": True,
-        "id": user.id,
-        "full_name": user.full_name,
-        "email": user.email,
+        **_serialize_user(user)
     }
+
+@user_router.get("/preferences")
+def get_preferences(user: User = Depends(get_current_user)) -> dict[str, Any]:
+    if user.preferences:
+        return {"theme": user.preferences.theme, "font": user.preferences.font}
+    return {"theme": "dark", "font": "Inter"}
+
+@user_router.post("/preferences")
+def update_preferences(
+    payload: PreferencesRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+) -> dict[str, Any]:
+    existing = db.query(UserPreferences).filter_by(user_id=user.id).first()
+    if existing:
+        if payload.theme: existing.theme = payload.theme
+        if payload.font: existing.font = payload.font
+    else:
+        existing = UserPreferences(
+            user_id=user.id,
+            theme=payload.theme or "dark",
+            font=payload.font or "Inter"
+        )
+        db.add(existing)
+    
+    db.commit()
+    db.refresh(existing)
+    return {"theme": existing.theme, "font": existing.font}
+
