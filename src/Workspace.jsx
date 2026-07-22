@@ -4,7 +4,7 @@ import {
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
   Video, ChevronRight, ChevronLeft, X, Menu, AtSign, GitCommit,
   Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette,
-  MessageCircle
+  MessageCircle, Maximize2, Minimize2
 } from "lucide-react";
 
 const Logo = ({ size = 28 }) => (
@@ -233,11 +233,15 @@ html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 .search input::placeholder { color: var(--text-muted); }
 .icon-btn { width: 32px; height: 32px; border-radius: var(--radius); display: grid; place-items: center; flex: none; cursor: pointer; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); transition: .15s; position: relative; }
 .icon-btn:hover { color: var(--text); border-color: var(--border-strong); background: var(--surface); }
-.scroll { overflow-y: auto; padding: 24px; flex: 1; overscroll-behavior: contain; }
+.scroll { overflow-y: auto; overflow-x: hidden; padding: 24px; flex: 1; overscroll-behavior: contain; }
 
 /* cards / grid */
 .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: start; }
-.card { background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px; }
+.card { background: var(--card); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px; min-width: 0; }
+.card.expanded { grid-column: span 2; }
+.card.minimized .card-b { display: none; }
+.card.minimized { padding-bottom: 12px; opacity: 0.65; cursor: pointer; transition: opacity .15s; }
+.card.minimized:hover { opacity: 0.9; }
 .span2 { grid-column: span 2; }
 .card-h { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .card-h .ic { width: 16px; height: 16px; display: grid; place-items: center; flex: none; color: var(--text-secondary); }
@@ -918,7 +922,7 @@ export default function App() {
   const nav = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "calendar", label: "Calendar", icon: Calendar, badge: todayEvents.length },
-    { id: "messages", label: "Messages", icon: MessageSquare, badge: unreadSlack },
+    { id: "messages", label: "Slack", icon: MessageSquare, badge: unreadSlack },
     { id: "github", label: "GitHub", icon: Github },
     { id: "email", label: "Email", icon: Mail, badge: unreadEmail },
     { id: "settings", label: "Settings", icon: Settings },
@@ -1089,6 +1093,8 @@ export default function App() {
 /* ---------------------------- Dashboard ---------------------------- */
 function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go, onConnect, connections }) {
   const { next, text } = useCountdown(events);
+  const [expandedCard, setExpandedCard] = useState(null);
+  const toggleExpand = (id) => setExpandedCard(prev => prev === id ? null : id);
   const slackConnected = connections?.slack?.connected;
   const gcalConnected = connections?.calendar?.connected || data.calendar?.length > 0;
   const ghConnected = connections?.github?.connected;
@@ -1134,6 +1140,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
 
       {/* Slack */}
       <Card icon={SlackIcon} color="var(--slack)" title="Slack" sub={slackConnected ? "Mentions & messages" : "Not connected"}
+        cardId="slack" expandedCard={expandedCard} onExpand={toggleExpand}
         action={slackConnected
           ? <a className="link-btn" href="https://slack.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
           : <button type="button" className="btn sm" onClick={() => onConnect("slack")}>Connect</button>}>
@@ -1160,6 +1167,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
 
       {/* Calendar */}
       <Card icon={Calendar} color="var(--gcal)" title="Today's schedule"
+        cardId="calendar" expandedCard={expandedCard} onExpand={toggleExpand}
         sub={gcalConnected ? (todayEvents.length > 0 ? `${todayEvents.length} event${todayEvents.length !== 1 ? "s" : ""}` : "No events today") : "Not connected"}
         action={gcalConnected
           ? <button type="button" className="btn sm" onClick={onNewEvent}><Plus size={12} /> New event</button>
@@ -1194,6 +1202,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
 
       {/* GitHub */}
       <Card icon={Github} color="var(--gh)" title="GitHub activity" sub={ghConnected ? "Recent commits & PRs" : "Not connected"}
+        cardId="github" expandedCard={expandedCard} onExpand={toggleExpand}
         action={ghConnected
           ? <a className="link-btn" href="https://github.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
           : <button type="button" className="btn sm" onClick={() => onConnect("gh")}>Connect</button>}>
@@ -1218,6 +1227,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
 
       {/* Email */}
       <Card icon={Mail} color="var(--email)" title="Inbox"
+        cardId="email" expandedCard={expandedCard} onExpand={toggleExpand}
         sub={emailConnected ? `${data.email.filter((e) => e.unread).length} unread` : "Not connected"}
         action={emailConnected
           ? <a className="link-btn" href="https://mail.google.com" target="_blank" rel="noreferrer">Open <ExternalLink size={12} /></a>
@@ -1246,9 +1256,13 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
   );
 }
 
-function Card({ icon: Ic, color, title, sub, action, children, className = "" }) {
+function Card({ icon: Ic, color, title, sub, action, children, className = "", cardId, expandedCard, onExpand }) {
+  const isExpanded = !!onExpand && expandedCard === cardId;
+  const isMinimized = !!onExpand && expandedCard !== null && expandedCard !== cardId;
+  const cardClass = `card${className ? ` ${className}` : ""}${isExpanded ? " expanded" : ""}${isMinimized ? " minimized" : ""}`;
+
   return (
-    <section className={`card ${className}`}>
+    <section className={cardClass} onClick={isMinimized ? () => onExpand(cardId) : undefined}>
       <div className="card-h">
         <div className="ic" style={{ background: `color-mix(in srgb, ${color} 18%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)` }}>
           <Ic size={16} color={color} />
@@ -1257,7 +1271,21 @@ function Card({ icon: Ic, color, title, sub, action, children, className = "" })
           <h3>{title}</h3>
           <div className="sub">{sub}</div>
         </div>
-        {action && <div className="right">{action}</div>}
+        {(action || onExpand) && (
+          <div className="right">
+            {action}
+            {onExpand && (
+              <button
+                className="icon-btn"
+                style={{ width: 24, height: 24, border: "none", flexShrink: 0 }}
+                onClick={(e) => { e.stopPropagation(); onExpand(cardId); }}
+                title={isExpanded ? "Collapse" : "Expand"}
+              >
+                {isExpanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <div className="card-b">{children}</div>
     </section>
@@ -1395,7 +1423,7 @@ function MessagesView({ slack, slackConnected, onConnect, onDisconnect }) {
   if (!slackConnected) {
     return (
       <div>
-        <ViewHead title="Messages" sub="Slack mentions & direct messages" />
+        <ViewHead title="Slack" sub="Slack mentions & direct messages" />
         <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--card)", borderRadius: "var(--radius)", border: "1px solid var(--border)", marginTop: 20 }}>
           <SlackIcon size={48} color="var(--text-muted)" style={{ margin: "0 auto 16px" }} />
           <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "var(--text)" }}>Connect your Slack</h2>
@@ -1408,7 +1436,7 @@ function MessagesView({ slack, slackConnected, onConnect, onDisconnect }) {
 
   return (
     <div>
-      <ViewHead title="Messages" sub="Slack mentions & direct messages"
+      <ViewHead title="Slack" sub="Slack mentions & direct messages"
         action={
           <div style={{ display: "flex", gap: 10 }}>
             <button className="btn" style={{ color: "var(--danger)", borderColor: "var(--border)" }} onClick={onDisconnect}>Disconnect</button>
