@@ -42,7 +42,7 @@ def status_for_user(db: Session, user_id: int) -> dict[str, bool]:
     sl = db.query(SlackConnection).filter(SlackConnection.user_id == user_id).first()
     return {
         "slack": sl is not None,
-        "gcal": store.has("google"),
+        "gcal": em is not None,
         "calendly": bool(settings.calendly_token),
         "github": gh is not None,
         "email": em is not None,
@@ -124,6 +124,43 @@ def today_events() -> list[schemas.CalendarEvent]:
     return [e for e in calendar_events() if e.start.date() == today]
 
 
+async def calendar_events_for_user(db: Session, user_id: int) -> list[schemas.CalendarEvent]:
+    from datetime import timezone
+    from .google_client import fetch_calendar_events, get_valid_google_token
+
+    conn = db.query(EmailConnection).filter(EmailConnection.user_id == user_id).first()
+    if not conn:
+        return []
+    try:
+        token = await get_valid_google_token(db, conn)
+        raw = await fetch_calendar_events(token)
+    except Exception as e:  # noqa: BLE001
+        log.warning("live calendar fetch for user_id=%s failed (%s)", user_id, e)
+        return []
+
+    out: list[schemas.CalendarEvent] = []
+    for e in raw:
+        try:
+            start_str, end_str = e["start"], e["end"]
+            start = parse_iso(start_str) if "T" in start_str else \
+                __import__("datetime").datetime.fromisoformat(start_str).replace(tzinfo=timezone.utc)
+            end = parse_iso(end_str) if "T" in end_str else \
+                __import__("datetime").datetime.fromisoformat(end_str).replace(tzinfo=timezone.utc)
+        except Exception:
+            continue
+        out.append(schemas.CalendarEvent(
+            id=e["id"],
+            title=e["title"],
+            start=start,
+            end=end,
+            priority="medium",
+            location=e.get("location"),
+            attendees=e.get("attendees", 0),
+            meet_link=e.get("meet_link"),
+        ))
+    return out
+
+
 def create_event(req: schemas.CreateEventRequest) -> schemas.CalendarEvent:
     tok = store.get("google")
     if tok:
@@ -186,7 +223,7 @@ INTEGRATION_META = {
 async def dashboard_payload(user: User, db: Session) -> dict:
     st = status_for_user(db, user.id)
     slack = slack_messages_for_user(db, user.id) if st["slack"] else []
-    cal = calendar_events()
+    cal = await calendar_events_for_user(db, user.id) if st["gcal"] else []
     cly = calendly_overview()
     gh = github_activity_for_user(db, user.id) if st["github"] else []
     mail = await emails_for_user(db, user.id) if st["email"] else []
