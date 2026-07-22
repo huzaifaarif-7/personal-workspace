@@ -42,7 +42,11 @@ def google_login(request: Request, user: User = Depends(get_current_user)):
         "client_id": settings.google_client_id,
         "redirect_uri": settings.google_redirect_uri,
         "response_type": "code",
-        "scope": "https://www.googleapis.com/auth/gmail.readonly openid email",
+        "scope": (
+            "openid email "
+            "https://www.googleapis.com/auth/gmail.readonly "
+            "https://www.googleapis.com/auth/calendar.readonly"
+        ),
         "access_type": "offline",
         "prompt": "consent",
         "state": state,
