@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
-  Video, ChevronRight, X, Menu, AtSign, GitCommit,
+  Video, ChevronRight, ChevronLeft, X, Menu, AtSign, GitCommit,
   Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette
 } from "lucide-react";
 
@@ -940,7 +940,7 @@ export default function App() {
 function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewEvent, go, onConnect }) {
   const { next, text } = useCountdown(events);
   const slackConnected = data.integrations.find((i) => i.id === "slack")?.connected;
-  const gcalConnected = data.integrations.find((i) => i.id === "gcal")?.connected;
+  const gcalConnected = data.integrations.find((i) => i.id === "gcal")?.connected || data.calendar?.length > 0;
   const ghConnected = data.integrations.find((i) => i.id === "gh")?.connected;
   const emailConnected = data.integrations.find((i) => i.id === "email")?.connected;
   const stats = [
@@ -1010,11 +1010,11 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
 
       {/* Calendar */}
       <Card icon={Calendar} color="var(--gcal)" title="Today's schedule"
-        sub={gcalConnected ? `${todayEvents.length} event${todayEvents.length !== 1 ? "s" : ""}` : "Not connected"}
+        sub={gcalConnected ? (todayEvents.length > 0 ? `${todayEvents.length} event${todayEvents.length !== 1 ? "s" : ""}` : "No events today") : "Not connected"}
         action={gcalConnected
           ? <button type="button" className="btn sm" onClick={onNewEvent}><Plus size={12} /> New event</button>
           : <button type="button" className="btn sm primary" onClick={() => onConnect("gcal")}>Connect</button>}>
-        {gcalConnected ? todayEvents.map((e) => (
+        {gcalConnected ? (todayEvents.length > 0 ? todayEvents.map((e) => (
           <div className="row" key={e.id} style={{ opacity: e.done ? 0.5 : 1 }}>
             <div style={{ textAlign: "center", flex: "none", width: 52 }}>
               <div style={{ fontSize: 13, fontWeight: 700 }}>{fmtTime(e.start)}</div>
@@ -1031,6 +1031,8 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
               </div>
             </div>
           </div>
+        )) : (
+          <div className="empty-state"><div className="text">No events today</div></div>
         )) : (
           <div className="empty-state">
             <Calendar size={28} color="var(--text-muted)" />
@@ -1115,47 +1117,125 @@ function Card({ icon: Ic, color, title, sub, action, children, className = "" })
 
 /* ---------------------------- Calendar view ---------------------------- */
 function CalendarView({ events, onNew }) {
-  const groups = useMemo(() => {
-    const g = {};
-    [...events].sort((a, b) => a.start - b.start).forEach((e) => {
-      const k = e.start.toDateString();
-      (g[k] = g[k] || []).push(e);
-    });
-    return g;
+  const today = new Date();
+  const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(today);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+
+  const byDate = useMemo(() => {
+    const m = {};
+    events.forEach((e) => { const k = e.start.toDateString(); (m[k] = m[k] || []).push(e); });
+    return m;
   }, [events]);
+
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(year, month, d));
+
+  const selEvents = (byDate[selectedDate.toDateString()] || []).sort((a, b) => a.start - b.start);
+  const monthLabel = viewDate.toLocaleDateString([], { month: "long", year: "numeric" });
+  const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const isToday = (d) => d && d.toDateString() === today.toDateString();
+  const isSel = (d) => d && d.toDateString() === selectedDate.toDateString();
+
   return (
     <div>
-      <ViewHead title="Calendar" sub="Your upcoming schedule"
+      <ViewHead title="Calendar" sub={monthLabel}
         action={<button className="btn primary" onClick={onNew}><Plus size={15} /> New event</button>} />
-      {Object.entries(groups).map(([day, evs]) => (
-        <div key={day} style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 12px" }}>
-            {new Date(day).toDateString() === new Date().toDateString() ? "Today · " : ""}
-            {new Date(day).toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" })}
+
+      {/* Month grid */}
+      <div className="card" style={{ marginBottom: 20 }}>
+        <div style={{ padding: "18px 20px 14px" }}>
+          {/* Nav header */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <button className="btn" style={{ padding: "4px 8px", minWidth: 0, height: "auto" }}
+              onClick={() => setViewDate(new Date(year, month - 1, 1))}>
+              <ChevronLeft size={16} />
+            </button>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--text)" }}>{monthLabel}</span>
+            <button className="btn" style={{ padding: "4px 8px", minWidth: 0, height: "auto" }}
+              onClick={() => setViewDate(new Date(year, month + 1, 1))}>
+              <ChevronRight size={16} />
+            </button>
           </div>
-          <div className="card"><div className="card-b">
-            {evs.map((e) => (
-              <div className={`row ${(e.id).unread || (e.id).isUnread ? "unread" : ""}`} key={e.id}>
-                <div style={{ width: 4, alignSelf: "stretch", borderRadius: 4, background: `var(--${e.priority === "high" ? "rose" : e.priority === "medium" ? "amber" : "green"})` }} />
-                <div style={{ textAlign: "center", width: 56, flex: "none" }}>
-                  <div style={{ fontWeight: 700, fontSize: 13 }}>{fmtTime(e.start)}</div>
-                  <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{fmtTime(e.end)}</div>
-                </div>
-                <div className="body">
-                  <div className="top"><span className="name" style={{ fontSize: 14 }}>{e.title}</span>
-                    <span className={`pill ${PRIO[e.priority][1]}`} style={{ marginLeft: "auto" }}>{PRIO[e.priority][0]}</span></div>
-                  <div className="text" style={{ display: "flex", gap: 12 }}>
-                    <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}>
-                      {e.meet ? <Video size={12} /> : <Calendar size={12} />} {e.location}</span>
-                    {e.attendees && <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Users size={12} /> {e.attendees}</span>}
-                  </div>
-                </div>
-                {e.meet && <a className="btn" style={{ alignSelf: "center" }} href="https://meet.google.com" target="_blank" rel="noreferrer"><Video size={14} /> Join</a>}
-              </div>
+
+          {/* Day-of-week headers */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, marginBottom: 4 }}>
+            {DOW.map((d) => (
+              <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 600, color: "var(--text-muted)", padding: "2px 0" }}>{d}</div>
             ))}
-          </div></div>
+          </div>
+
+          {/* Day cells */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2 }}>
+            {cells.map((day, i) => {
+              const hasDot = day && byDate[day.toDateString()]?.length > 0;
+              const sel = isSel(day);
+              const tod = isToday(day);
+              return (
+                <div key={i} onClick={() => day && setSelectedDate(day)}
+                  style={{
+                    textAlign: "center", padding: "6px 2px 4px", borderRadius: 8, fontSize: 13,
+                    cursor: day ? "pointer" : "default",
+                    background: sel ? "var(--primary)" : tod ? "color-mix(in srgb, var(--primary) 14%, transparent)" : "transparent",
+                    color: sel ? "#fff" : tod ? "var(--primary)" : day ? "var(--text)" : "transparent",
+                    fontWeight: tod || sel ? 700 : 400,
+                    transition: "background .12s",
+                  }}>
+                  {day?.getDate()}
+                  {hasDot && (
+                    <div style={{ width: 4, height: 4, borderRadius: "50%", margin: "2px auto 0",
+                      background: sel ? "rgba(255,255,255,0.7)" : "var(--gcal)" }} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      ))}
+      </div>
+
+      {/* Events for selected date */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 12 }}>
+        {isToday(selectedDate) ? "Today · " : ""}
+        {selectedDate.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}
+      </div>
+
+      {selEvents.length === 0 ? (
+        <div className="card" style={{ textAlign: "center", padding: "32px 20px", color: "var(--text-muted)", fontSize: 13 }}>
+          No events scheduled for this day
+        </div>
+      ) : (
+        <div className="card"><div className="card-b">
+          {selEvents.map((e) => (
+            <div className="row" key={e.id} style={{ opacity: e.done ? 0.5 : 1 }}>
+              <div style={{ width: 4, alignSelf: "stretch", borderRadius: 4,
+                background: `var(--${e.priority === "high" ? "rose" : e.priority === "medium" ? "amber" : "green"})` }} />
+              <div style={{ textAlign: "center", width: 56, flex: "none" }}>
+                <div style={{ fontWeight: 700, fontSize: 13 }}>{fmtTime(e.start)}</div>
+                <div style={{ fontSize: 10, color: "var(--text-muted)" }}>{fmtTime(e.end)}</div>
+              </div>
+              <div className="body">
+                <div className="top">
+                  <span className="name" style={{ fontSize: 14 }}>{e.title}</span>
+                  <span className={`pill ${PRIO[e.priority][1]}`} style={{ marginLeft: "auto" }}>{PRIO[e.priority][0]}</span>
+                </div>
+                <div className="text" style={{ display: "flex", gap: 12 }}>
+                  {e.meet
+                    ? <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Video size={12} /> Google Meet</span>
+                    : e.location && <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Calendar size={12} /> {e.location}</span>}
+                  {e.attendees > 0 && <span style={{ display: "inline-flex", gap: 5, alignItems: "center" }}><Users size={12} /> {e.attendees}</span>}
+                </div>
+              </div>
+              {e.meet && <a className="btn" style={{ alignSelf: "center" }} href="https://meet.google.com" target="_blank" rel="noreferrer"><Video size={14} /> Join</a>}
+            </div>
+          ))}
+        </div></div>
+      )}
     </div>
   );
 }
