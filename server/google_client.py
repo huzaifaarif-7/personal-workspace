@@ -16,6 +16,7 @@ settings = get_settings()
 
 GOOGLE_API_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 GMAIL_API_URL = "https://gmail.googleapis.com/gmail/v1"
+GCAL_API_URL = "https://www.googleapis.com/calendar/v3"
 
 def _headers(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}", "Accept": "application/json"}
@@ -110,6 +111,57 @@ async def _fetch_message_metadata(client: httpx.AsyncClient, token: str, message
         "important": "IMPORTANT" in labels,
         "received_at": ts.isoformat()
     }
+
+async def fetch_calendar_events(token: str) -> list[dict[str, Any]]:
+    now = datetime.now(timezone.utc)
+    time_min = now.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+    time_max = (now + timedelta(days=7)).replace(hour=23, minute=59, second=59, microsecond=0).isoformat()
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(
+            f"{GCAL_API_URL}/calendars/primary/events",
+            headers=_headers(token),
+            params={
+                "timeMin": time_min,
+                "timeMax": time_max,
+                "singleEvents": "true",
+                "orderBy": "startTime",
+                "maxResults": 50,
+            },
+        )
+        if resp.status_code == 401:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail={"error": "token_invalid"},
+            )
+        resp.raise_for_status()
+
+        events = []
+        for item in resp.json().get("items", []):
+            start_raw = item.get("start", {})
+            end_raw = item.get("end", {})
+            start_str = start_raw.get("dateTime") or start_raw.get("date")
+            end_str = end_raw.get("dateTime") or end_raw.get("date")
+            if not start_str or not end_str:
+                continue
+
+            meet_link = None
+            for ep in item.get("conferenceData", {}).get("entryPoints", []):
+                if ep.get("entryPointType") == "video":
+                    meet_link = ep.get("uri")
+                    break
+
+            events.append({
+                "id": item["id"],
+                "title": item.get("summary", "(No title)"),
+                "start": start_str,
+                "end": end_str,
+                "location": item.get("location"),
+                "attendees": len(item.get("attendees", [])),
+                "meet_link": meet_link,
+            })
+        return events
+
 
 async def fetch_messages(token: str) -> list[dict[str, Any]]:
     async with httpx.AsyncClient(timeout=20) as client:
