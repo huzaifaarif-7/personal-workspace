@@ -6,6 +6,7 @@ import {
   Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette,
   MessageCircle, Maximize2, Minimize2
 } from "lucide-react";
+import Landing from "./Landing.jsx";
 
 const Logo = ({ size = 28 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -508,7 +509,7 @@ async function fetchDashboard() {
    AUTH VIEW
    ========================================================================= */
 function AuthView({ onAuthSuccess }) {
-  const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [mode, setMode] = useState(window.location.pathname === "/signup" ? "signup" : "login"); // "login" | "signup"
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   
@@ -880,24 +881,28 @@ export default function App() {
   }
 
   if (!user) {
-    return (
-      <>
-        <style>{CSS}</style>
-        <AuthView onAuthSuccess={(payload) => {
-          if (payload && payload.authenticated) {
-            if (payload.preferences) {
-              applyPreferences(payload.preferences);
-              if (payload.preferences.theme) setTheme(payload.preferences.theme);
+    if (window.location.pathname === "/login" || window.location.pathname === "/signup") {
+      return (
+        <>
+          <style>{CSS}</style>
+          <AuthView onAuthSuccess={(payload) => {
+            if (payload && payload.authenticated) {
+              if (payload.preferences) {
+                applyPreferences(payload.preferences);
+                if (payload.preferences.theme) setTheme(payload.preferences.theme);
+              }
+              if (payload.connections) setConnections(payload.connections);
+              setUser(payload);
+              window.history.pushState({}, '', '/');
+              fetchDashboardData();
+            } else {
+              checkAuth();
             }
-            if (payload.connections) setConnections(payload.connections);
-            setUser(payload);
-            fetchDashboardData();
-          } else {
-            checkAuth();
-          }
-        }} />
-      </>
-    );
+          }} />
+        </>
+      );
+    }
+    return <Landing />;
   }
 
   const getInitials = (name) => {
