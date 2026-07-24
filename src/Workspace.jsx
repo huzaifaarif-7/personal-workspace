@@ -51,16 +51,16 @@ const CSS = `
 html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
 
 :root {
-  --bg: #0a0a0a;
-  --surface: #111111;
-  --card: #161616;
-  --border: #272727;
-  --border-strong: #333333;
-  --text: #ededed;
-  --text-secondary: #888888;
-  --text-muted: #555555;
-  --primary: #4f8ef7;
-  --primary-bg: rgba(79, 142, 247, 0.08);
+  --bg: #07070d;
+  --surface: #0e0e18;
+  --card: #13131f;
+  --border: #1e1e2e;
+  --border-strong: #2a2a40;
+  --text: #e4e6f0;
+  --text-secondary: #7a7d96;
+  --text-muted: #45475a;
+  --primary: #5b8df7;
+  --primary-bg: rgba(91, 141, 247, 0.08);
   --danger: #f87171;
   --success: #4ade80;
   --radius: 8px;
@@ -467,7 +467,7 @@ const ICOLOR = { slack: "var(--slack)", gcal: "var(--gcal)", github: "var(--gh)"
 const IDMAP = { github: "gh" };   // API id -> internal id
 
 const THEMES = [
-  { id: "dark",     label: "Dark",     bg: "#0a0a0a", surface: "#161616", accent: "#4f8ef7" },
+  { id: "dark",     label: "Dark",     bg: "#07070d", surface: "#13131f", accent: "#5b8df7" },
   { id: "light",    label: "Light",    bg: "#f0f0f0", surface: "#ffffff", accent: "#2563eb" },
   { id: "midnight", label: "Midnight", bg: "#060d1a", surface: "#102030", accent: "#3d72d4" },
   { id: "forest",   label: "Forest",   bg: "#060d08", surface: "#112016", accent: "#1e8a4c" },

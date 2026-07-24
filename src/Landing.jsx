@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { Lock, Palette, Zap, ShieldCheck } from "lucide-react";
 import "./Landing.css";
 
 export default function Landing() {
@@ -72,9 +73,6 @@ export default function Landing() {
       {/* HERO */}
       <section className="hero">
         <div className="hero-left">
-          <div className="hero-eyebrow">
-            <span></span> Now in beta
-          </div>
           <h1>
             One tab for<br />
             <em>everything</em><br />
@@ -359,7 +357,7 @@ export default function Landing() {
       {/* FEATURE STRIP */}
       <div className="feature-strip">
         <div className="feat reveal">
-          <div className="feat-icon">🔒</div>
+          <div className="feat-icon"><Lock size={24} color="var(--primary)" /></div>
           <div className="feat-title">OAuth only, no passwords stored</div>
           <p className="feat-desc">
             Every integration uses the official OAuth2 flow. We never see your
@@ -368,7 +366,7 @@ export default function Landing() {
           </p>
         </div>
         <div className="feat reveal" style={{ transitionDelay: "0.1s" }}>
-          <div className="feat-icon">🎨</div>
+          <div className="feat-icon"><Palette size={24} color="var(--primary)" /></div>
           <div className="feat-title">Your theme, your font</div>
           <p className="feat-desc">
             Pick a color theme and font that suits you. Your choice is saved to
@@ -376,7 +374,7 @@ export default function Landing() {
           </p>
         </div>
         <div className="feat reveal" style={{ transitionDelay: "0.2s" }}>
-          <div className="feat-icon">⚡</div>
+          <div className="feat-icon"><Zap size={24} color="var(--primary)" /></div>
           <div className="feat-title">One request, everything loaded</div>
           <p className="feat-desc">
             On login, all your connection statuses and preferences load in a
@@ -384,7 +382,7 @@ export default function Landing() {
           </p>
         </div>
         <div className="feat reveal" style={{ transitionDelay: "0.3s" }}>
-          <div className="feat-icon">🛡️</div>
+          <div className="feat-icon"><ShieldCheck size={24} color="var(--primary)" /></div>
           <div className="feat-title">Read-only by design</div>
           <p className="feat-desc">
             Workspace only requests read scopes. It can't push commits, send
