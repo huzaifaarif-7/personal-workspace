@@ -66,7 +66,7 @@ export default function Landing() {
               <path d="M7 1L13 4V10L7 13L1 10V4L7 1Z" />
             </svg>
           </div>
-          <span className="logo-text">Workspace</span>
+          <span className="logo-text">Personal Workspace</span>
         </a>
       </nav>
 
@@ -331,7 +331,7 @@ export default function Landing() {
             <div className="step-title">Connect your services</div>
             <p className="step-desc">
               Authorize GitHub, Gmail, Slack, and Calendar through their official
-              OAuth flows. Workspace never stores your data — only the access
+              OAuth flows. Personal Workspace never stores your data — only the access
               token.
             </p>
           </div>
@@ -385,7 +385,7 @@ export default function Landing() {
           <div className="feat-icon"><ShieldCheck size={24} color="var(--primary)" /></div>
           <div className="feat-title">Read-only by design</div>
           <p className="feat-desc">
-            Workspace only requests read scopes. It can't push commits, send
+            Personal Workspace only requests read scopes. It can't push commits, send
             emails, or post messages — it's a viewer, not an actor.
           </p>
         </div>
@@ -423,7 +423,7 @@ export default function Landing() {
               <path d="M7 1L13 4V10L7 13L1 10V4L7 1Z" />
             </svg>
           </div>
-          <span className="footer-brand">Workspace</span>
+          <span className="footer-brand">Personal Workspace</span>
           <span className="footer-copy">© 2025</span>
         </div>
         <div className="footer-links">
