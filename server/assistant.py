@@ -19,21 +19,26 @@ _ACTION_CREATE = re.compile(
     r"\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)",
     re.I,
 )
-_SRC_SLACK  = re.compile(r"\bslack\b|\bmentioned?\b|\btagged\b|\bdm\b|\bchannel\b", re.I)
-_SRC_GITHUB = re.compile(r"\bgithub\b|\bcommit\b|\bpush\b|\brepo\b|\bpull.?request\b|\bpr\b", re.I)
-_SRC_EMAIL  = re.compile(r"\b(email|mail|inbox|gmail)\b", re.I)
-_SRC_CAL    = re.compile(r"\b(calendar|meeting|event|schedule)\b", re.I)
+_SRC_SLACK  = re.compile(r"\bslack\b|\bmentions?\b|\bmentioned\b|\btagged\b|\bdm\b|\bchannels?\b", re.I)
+_SRC_GITHUB = re.compile(r"\bgithub\b|\bcommit\w*|\bpush\w*|\brepos?\b|\bpull.?requests?\b|\bpr\b", re.I)
+_SRC_EMAIL  = re.compile(r"\bemails?\b|\bmail\b|\binbox\b|\bgmail\b", re.I)
+_SRC_CAL    = re.compile(r"\bcalendar\b|\bmeetings?\b|\bevents?\b|\bschedule\b", re.I)
 _LATEST     = re.compile(r"\b(latest|most recent|newest|just|last|recently)\b", re.I)
 _PERSON_PRE = re.compile(
-    r"(?:from|by|about|with|did|has)\s+([A-Za-z][a-zA-Z]+(?:\s+[A-Za-z][a-zA-Z]+)?)",
+    r"(?:from|by|about|with|did|has)\s+([A-Za-z][a-zA-Z]+)",
     re.I,
 )
 _PERSON_SFX = re.compile(
     r"\b([A-Za-z][a-zA-Z]+)\s+(?:message|mentioned|dm|email|mail|commit|pushed)\b",
     re.I,
 )
-_STOP_WORDS = {"me", "i", "my", "you", "we", "us", "it", "a", "the", "do", "did",
-               "get", "got", "any", "all", "some"}
+_STOP_WORDS = {
+    "me", "i", "my", "you", "we", "us", "it", "a", "the",
+    "do", "did", "get", "got", "any", "all", "some",
+    "who", "what", "when", "where", "which", "how",
+    "text", "message", "send", "sent", "say", "said",
+    "last", "latest", "recent", "yesterday", "today", "tomorrow",
+}
 
 
 def _extract_intent(message: str) -> dict:
