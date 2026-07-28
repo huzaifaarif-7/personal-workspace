@@ -11,7 +11,7 @@ export default function WorkspaceLogo({ size = 32, showText = false }) {
       >
         <rect width="100" height="100" rx={radius} fill={bg}/>
         <path
-          d="M22 22 L34 22 L50 62 L66 22 L78 22 L78 78 L66 78 L66 44 L53 78 L47 78 L34 44 L34 78 L22 78 Z"
+          d="M22 78 L34 78 L50 38 L66 78 L78 78 L78 22 L66 22 L66 56 L53 22 L47 22 L34 56 L34 22 L22 22 Z"
           fill={blue}
         />
       </svg>
