@@ -7,12 +7,7 @@ import {
   MessageCircle, Maximize2, Minimize2
 } from "lucide-react";
 import Landing from "./Landing.jsx";
-
-const Logo = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L22 20H2L12 2Z" />
-  </svg>
-);
+import WorkspaceLogo from "./components/WorkspaceLogo.jsx";
 
 /* =========================================================================
    Huzaifa's Workspace — AI-powered personal productivity command center
@@ -553,9 +548,8 @@ function AuthView({ onAuthSuccess }) {
   return (
     <div className="auth-wrap">
       
-        <div className="auth-header">
-          <Logo size={32} />
-          <div className="auth-title">Workspace</div>
+        <div className="auth-header" style={{ display: "flex", justifyContent: "center" }}>
+          <WorkspaceLogo size={40} showText={true} />
         </div>
         
         <div className="auth-card">
@@ -957,11 +951,7 @@ export default function App() {
       {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
       <aside className={`side ${navOpen ? "open" : ""}`}>
         <div className="brand">
-          <Logo size={32} />
-          <div>
-            <div className="brand-name hw-display">Workspace</div>
-            <div className="brand-sub">{user.full_name.split(' ')[0]}'s command center</div>
-          </div>
+          <WorkspaceLogo size={28} showText={true} />
           <button className="icon-btn side-close" style={{ marginLeft: "auto" }} onClick={() => setNavOpen(false)}><X size={16} /></button>
         </div>
         <div className="nav-label">Menu</div>
@@ -2040,7 +2030,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 1 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Connect your tools</h2>}
           {step === 2 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Grant permissions</h2>}
           {step === 3 && <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <Logo size={32} />
+            <WorkspaceLogo size={32} />
             <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>You're all set!</h2>
           </div>}
         </div>

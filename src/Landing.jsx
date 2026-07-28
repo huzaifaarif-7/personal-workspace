@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Lock, Palette, Zap, ShieldCheck } from "lucide-react";
+import WorkspaceLogo from "./components/WorkspaceLogo.jsx";
 import "./Landing.css";
 
 export default function Landing() {
@@ -60,13 +61,8 @@ export default function Landing() {
             Get started
           </a>
         </div>
-        <a href="/" className="logo">
-          <div className="logo-mark">
-            <svg viewBox="0 0 14 14">
-              <path d="M7 1L13 4V10L7 13L1 10V4L7 1Z" />
-            </svg>
-          </div>
-          <span className="logo-text">Personal Workspace</span>
+        <a href="/" style={{ textDecoration: 'none' }}>
+          <WorkspaceLogo size={28} showText={true} />
         </a>
       </nav>
 
@@ -412,18 +408,9 @@ export default function Landing() {
       {/* FOOTER */}
       <footer>
         <div className="footer-left">
-          <div
-            className="logo-mark"
-            style={{ width: "22px", height: "22px", borderRadius: "5px" }}
-          >
-            <svg
-              viewBox="0 0 14 14"
-              style={{ width: "11px", height: "11px", fill: "#fff" }}
-            >
-              <path d="M7 1L13 4V10L7 13L1 10V4L7 1Z" />
-            </svg>
+          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
+            <WorkspaceLogo size={22} showText={true} />
           </div>
-          <span className="footer-brand">Personal Workspace</span>
           <span className="footer-copy">© 2025</span>
         </div>
         <div className="footer-links">
