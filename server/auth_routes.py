@@ -56,7 +56,7 @@ def _serialize_user(user: User) -> dict[str, Any]:
                 "connected": user.slack_connection is not None,
             },
             "calendar": {
-                "connected": user.calendar_connection is not None,
+                "connected": user.email_connection is not None,
             }
         }
     }

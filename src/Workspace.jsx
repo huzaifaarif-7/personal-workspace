@@ -1970,19 +1970,21 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
       return `Done! I've added "New Meeting" to your calendar for ${isTomorrow ? "tomorrow" : "today"} at ${fmtTime(d)}${priority === "high" ? " (marked important)" : ""}. Rename it from the Calendar tab if needed.`;
     }
 
-    // 2. Slack — with person filter and "latest" awareness
+    // 2. Slack — labeled block format
     if (/\bslack\b|\bmentioned?\b|\btagged\b|\bdm\b/.test(t)) {
+      const fmtSlack = (m) =>
+        `From: ${m.from}\nChannel: ${m.channel || "DM"}\nTime: ${m.when} ago\nMessage:\n${m.text}`;
       let mentions = [...c.slack.mentions];
       if (person) {
         mentions = mentions.filter((m) => m.from.toLowerCase().includes(person));
         if (!mentions.length) return `No Slack messages from "${_personRaw}" found.`;
-        return `Slack message from ${_personRaw}:\n• ${mentions[0].from} in ${mentions[0].channel} (${mentions[0].when}) — "${mentions[0].text}"`;
+        return `Message from ${_personRaw}:\n\n${fmtSlack(mentions[0])}`;
       }
       if (!mentions.length) return "No new Slack mentions right now.";
       if (/\b(recently|latest|last|most recent)\b/.test(t) || /who.*(mention|tagged)/.test(t)) {
-        return `Most recent mention:\n• ${mentions[0].from} in ${mentions[0].channel} (${mentions[0].when}) — "${mentions[0].text}"`;
+        return `Most recent mention:\n\n${fmtSlack(mentions[0])}`;
       }
-      return `You were mentioned by ${mentions.map((m) => m.from).join(", ")}.\nMost recent: ${mentions[0].from} in ${mentions[0].channel} — "${mentions[0].text}"`;
+      return `Recent Slack mentions:\n\n${mentions.map(fmtSlack).join("\n\n" + "─".repeat(20) + "\n\n")}`;
     }
 
     // 3. GitHub — guard against empty list
