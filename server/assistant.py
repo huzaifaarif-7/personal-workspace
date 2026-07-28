@@ -120,6 +120,17 @@ def _fmt(dt: datetime) -> str:
     return dt.strftime("%a %d %b, %I:%M %p")
 
 
+def _clean_channel(ch: str | None) -> str:
+    """Return a human-readable channel label; replace raw Slack IDs with 'DM'."""
+    if not ch:
+        return "DM"
+    inner = ch.lstrip("#")
+    # Slack user/channel IDs: start with U, C, D, G, W followed by alphanumerics
+    if re.match(r"^[UCDGBW][A-Z0-9]{6,}$", inner):
+        return "DM"
+    return ch
+
+
 # ─── Per-source data retrieval ────────────────────────────────────────────────
 
 def _fetch_slack(db, user_id: int, intent: dict, raw: str) -> list[dict]:
@@ -136,8 +147,11 @@ def _fetch_slack(db, user_id: int, intent: dict, raw: str) -> list[dict]:
 
     msgs.sort(key=lambda m: m.timestamp, reverse=True)
     return [
-        {"source": "Slack", "from": m.sender, "channel": m.channel or "DM",
-         "text": m.text, "time": _fmt(m.timestamp), "type": m.kind}
+        {"source": "Slack", "from": m.sender,
+         "channel": _clean_channel(m.channel),
+         "date": m.timestamp.strftime("%a %d %b"),
+         "time": m.timestamp.strftime("%I:%M %p"),
+         "text": m.text, "type": m.kind}
         for m in msgs[:intent["limit"]]
     ]
 
@@ -246,8 +260,11 @@ def _items_to_text(items: list[dict]) -> str:
         src = it.get("source", "")
         if src == "Slack":
             lines.append(
-                f"[Slack] From: {it['from']} | Channel: {it.get('channel', 'DM')} "
-                f"| Time: {it['time']}\n  Message: {it.get('text', '')}"
+                f"[Slack]\n"
+                f"  From: {it['from']}\n"
+                f"  Channel: {it.get('channel', 'DM')}\n"
+                f"  Date: {it.get('date', '')}  Time: {it.get('time', '')}\n"
+                f"  Message: {it.get('text', '').strip()}"
             )
         elif src == "GitHub":
             lines.append(
@@ -296,14 +313,20 @@ def _local_format(items: list[dict], intent: dict) -> str:
     if src == "slack":
         header = (
             "Latest Slack mention:" if rtype == "latest"
-            else f"Slack messages from {person}:" if person
-            else "Recent Slack mentions:"
+            else f"Messages from {person}:" if person
+            else "Recent Slack messages:"
         )
-        lines = [
-            f"• {i['from']} in {i['channel']} ({i['time']}): \"{i['text']}\""
-            for i in items
-        ]
-        return header + "\n" + "\n".join(lines)
+        blocks = []
+        for i in items:
+            blocks.append(
+                f"From: {i['from']}\n"
+                f"Channel: {i.get('channel', 'DM')}\n"
+                f"Date: {i.get('date', '')}\n"
+                f"Time: {i.get('time', '')}\n"
+                f"Message:\n{i.get('text', '').strip()}"
+            )
+        sep = "\n\n" + "─" * 20 + "\n\n"
+        return header + "\n\n" + sep.join(blocks)
 
     if src == "github":
         lines = [f"• {i['actor']} {i['action']} → {i['repo']} ({i['time']})" for i in items]
