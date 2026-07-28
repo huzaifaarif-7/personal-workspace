@@ -824,7 +824,7 @@ export default function App() {
     if (status === 'finished' || status === 'skipped') {
       setRunTour(false);
       localStorage.setItem("hasSeenTour", "true");
-    } else if (type === 'step:after' || type === 'target:not-found') {
+    } else if (type === 'step:after') {
       const nextIndex = index + (action === 'prev' ? -1 : 1);
       if (nextIndex === 0) {
         setView('dashboard');
@@ -880,11 +880,6 @@ export default function App() {
         if (payload.connections) setConnections(payload.connections);
         setUser(payload);
         fetchDashboardData();
-      } else {
-        setUser(null);
-        setConnections(null);
-        setOnboard(false);
-        setAuthLoading(false);
       }
     } catch (e) {
       setAuthLoading(false);
@@ -1157,15 +1152,7 @@ export default function App() {
       )}
 
       {/* ============ ONBOARDING ============ */}
-      {onboard && (
-        <Onboarding
-          user={user}
-          integrations={data.integrations}
-          mode={mode}
-          onConnect={liveConnect}
-          onDone={finishOnboarding}
-        />
-      )}
+      {/* Onboarding overlay removed in favor of Joyride */}
       {newEvent && <NewEventModal onClose={() => setNewEvent(false)} onAdd={addEvent} />}
     </div>
   );
@@ -2207,87 +2194,7 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
   );
 }
 
-/* ---------------------------- Onboarding ---------------------------- */
-function Onboarding({ user, integrations, mode, onConnect, onDone }) {
-  const [step, setStep] = useState(0);
-  const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, false])));
-  const connectedCount = Object.values(conn).filter(Boolean).length;
 
-  const steps = ["Welcome", "Connect apps", "Permissions", "All set"];
-  const next = () => setStep((s) => Math.min(s + 1, 3));
-
-  return (
-    <div className="overlay">
-      <div className="sheet">
-        <div className="sheet-h">
-          <div className="steps" style={{ marginBottom: 18 }}>{steps.map((_, i) => <i key={i} className={i <= step ? "on" : ""} />)}</div>
-          {step === 0 && <>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Mascot size={52} />
-              <div>
-                <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {user.full_name.split(' ')[0]}</h2>
-                <p style={{ color: "var(--text-secondary)", fontSize: 13.5, marginTop: 4 }}>Let's set up your command center.</p>
-              </div>
-            </div>
-          </>}
-          {step === 1 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Connect your tools</h2>}
-          {step === 2 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Grant permissions</h2>}
-          {step === 3 && <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <WorkspaceLogo size={32} />
-            <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>You're all set!</h2>
-          </div>}
-        </div>
-
-        <div className="sheet-b">
-          {step === 0 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
-            Stop tab-hopping between Slack, Calendar, GitHub and email. Connect them once and get a single, intelligent overview — plus an AI assistant that summarizes your whole day in seconds.
-          </p>}
-
-          {step === 1 && <div style={{ display: "grid", gap: 10 }}>
-            {integrations.map((it) => {
-              const Ic = intIcon[it.id] || Settings; const on = conn[it.id] || (mode === "live" && it.connected);
-              const isOauth = ["gh", "gcal", "email", "slack"].includes(it.id);
-              return (
-                <div className="conn-card" key={it.id} style={{ padding: 13 }}>
-                  <div className="conn-ic" style={{ width: 38, height: 38, background: `color-mix(in srgb, ${it.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${it.color} 30%, transparent)` }}><Ic size={18} color={it.color} /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 13.5 }}>{it.name}</div><div style={{ fontSize: 11.5, color: "var(--text-secondary)" }}>{it.desc}</div></div>
-                  <button className={on ? "btn connected" : "btn primary"} style={{ padding: "7px 13px", fontSize: 12.5 }}
-                    onClick={() => { if (mode === "live" && isOauth) { onConnect(it.id); return; } setConn((p) => ({ ...p, [it.id]: !on })); }}>
-                    {on ? <><Check size={13} /> Connected</> : "Connect"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>}
-
-          {step === 2 && <div style={{ display: "grid", gap: 10 }}>
-            {["Read your messages & mentions", "View calendar & create events", "Read repository activity", "Read your inbox & flag important mail"].map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 11, fontSize: 13 }}>
-                <CircleCheck size={17} color="var(--success)" /> {p}
-              </div>
-            ))}
-            <p style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>You can revoke access anytime from Settings. We never post on your behalf.</p>
-          </div>}
-
-          {step === 3 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
-            {connectedCount > 0 ? `${connectedCount} ${connectedCount === 1 ? "tool" : "tools"} connected. ` : ""}
-            Your dashboard is ready. Your assistant is standing by on the right — try asking <b style={{ color: "var(--text)" }}>"What's happening today?"</b>
-          </p>}
-        </div>
-
-        <div className="sheet-f">
-          {step > 0 && step < 3 && <button className="btn ghost" onClick={() => setStep((s) => s - 1)}>Back</button>}
-          {step === 0 && <button className="btn ghost" onClick={onDone}>Skip</button>}
-          <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-            {step < 3
-              ? <button className="btn primary" onClick={next}>{step === 0 ? "Get started" : "Continue"} <ChevronRight size={15} /></button>
-              : <button className="btn primary" onClick={onDone}>Enter workspace <ArrowUpRight size={15} /></button>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------------------- New event modal ---------------------------- */
 function NewEventModal({ onClose, onAdd }) {
