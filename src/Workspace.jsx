@@ -1887,34 +1887,72 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
     };
   };
 
-  /* offline fallback so the assistant always answers */
+  /* offline fallback — also used for create-event in all modes */
   const localAnswer = (q) => {
     const t = q.toLowerCase(); const c = context();
-    if (/(urgent|important).*(email|mail)|email.*(urgent|important)/.test(t) || (/email|mail|inbox/.test(t) && /urgent|important/.test(t)))
-      return `You have ${c.email.important.length} important email${c.email.important.length !== 1 ? "s" : ""}:\n${c.email.important.map((e) => `• ${e.from} — ${e.subject}`).join("\n")}`;
-    if (/email|mail|inbox/.test(t))
-      return `You've got ${c.email.unread} unread emails, ${c.email.important.length} marked important — most notably from ${c.email.important.map((e) => e.from).join(" and ")}.`;
-    if (/commit|repo|github|push/.test(t))
-      return `Recent GitHub activity:\n${c.github.slice(0, 3).map((g) => `• ${g.who} ${g.what} to ${g.repo} (${g.when} ago)`).join("\n")}`;
-    if (/tomorrow/.test(t))
-      return c.calendar_tomorrow.length ? `Tomorrow you have ${c.calendar_tomorrow.length} meetings:\n${c.calendar_tomorrow.map((e) => `• ${e.time} — ${e.title}`).join("\n")}` : "Your calendar is clear tomorrow — nice";
-    if (/slack|mention|tagged/.test(t))
-      return `You were mentioned by ${c.slack.mentions.map((m) => m.from).join(", ")}.\nMost recent: ${c.slack.mentions[0].from} in ${c.slack.mentions[0].channel} — "${c.slack.mentions[0].text}"`;
-    if (/create|schedule|set up|add.*(meeting|event|call)|meeting.*tomorrow/.test(t)) {
-      const m = t.match(/(\d{1,2})\s*(am|pm)/);
-      let hh = 17; if (m) { hh = parseInt(m[1]); if (m[2] === "pm" && hh < 12) hh += 12; if (m[2] === "am" && hh === 12) hh = 0; }
-      const tomorrow = /tomorrow/.test(t); const d = new Date(); if (tomorrow) d.setDate(d.getDate() + 1); d.setHours(hh, 0, 0, 0);
-      const ev = { id: "ai" + Date.now(), title: "New Meeting", start: d, end: new Date(d.getTime() + 30 * 60000), priority: "medium", location: "Google Meet", meet: true };
+
+    // Person extraction: "from Soha", "by Soha", "did Soha message"
+    const personMatch = q.match(/\b(?:from|by|about|with)\s+([A-Za-z][a-zA-Z]+)/i)
+      || q.match(/\b([A-Za-z][a-zA-Z]+)\s+(?:message|mentioned|dm|email|mail|commit|push)/i);
+    const person = personMatch ? personMatch[1].toLowerCase() : null;
+
+    // 1. Create / schedule event — FIRST to avoid false matches with "important", "gmail", etc.
+    if (/\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)/i.test(q)) {
+      const mMatch = t.match(/(\d{1,2})\s*(am|pm)/);
+      let hh = 17;
+      if (mMatch) { hh = parseInt(mMatch[1]); if (mMatch[2] === "pm" && hh < 12) hh += 12; if (mMatch[2] === "am" && hh === 12) hh = 0; }
+      const isTomorrow = /\btomorrow\b/.test(t);
+      const priority = /\b(important|urgent|high.?priority)\b/i.test(q) ? "high" : "medium";
+      const d = new Date(); if (isTomorrow) d.setDate(d.getDate() + 1); d.setHours(hh, 0, 0, 0);
+      const ev = { id: "ai" + Date.now(), title: "New Meeting", start: d, end: new Date(d.getTime() + 30 * 60000), priority, location: "Google Meet", meet: true };
       addEvent(ev);
-      return `Done I've added "New Meeting" to your calendar for ${tomorrow ? "tomorrow" : "today"} at ${fmtTime(d)} with a Google Meet link. You can rename it from the Calendar tab.`;
+      return `Done! I've added "New Meeting" to your calendar for ${isTomorrow ? "tomorrow" : "today"} at ${fmtTime(d)}${priority === "high" ? " (marked important)" : ""}. Rename it from the Calendar tab if needed.`;
     }
+
+    // 2. Slack — with person filter and "latest" awareness
+    if (/\bslack\b|\bmentioned?\b|\btagged\b|\bdm\b/.test(t)) {
+      let mentions = [...c.slack.mentions];
+      if (person) {
+        mentions = mentions.filter((m) => m.from.toLowerCase().includes(person));
+        if (!mentions.length) return `No Slack messages from "${personMatch[1]}" found.`;
+        return `Slack message from ${personMatch[1]}:\n• ${mentions[0].from} in ${mentions[0].channel} (${mentions[0].when}) — "${mentions[0].text}"`;
+      }
+      if (!mentions.length) return "No new Slack mentions right now.";
+      if (/\b(recently|latest|last|most recent)\b/.test(t) || /who.*(mention|tagged)/.test(t)) {
+        return `Most recent mention:\n• ${mentions[0].from} in ${mentions[0].channel} (${mentions[0].when}) — "${mentions[0].text}"`;
+      }
+      return `You were mentioned by ${mentions.map((m) => m.from).join(", ")}.\nMost recent: ${mentions[0].from} in ${mentions[0].channel} — "${mentions[0].text}"`;
+    }
+
+    // 3. GitHub — guard against empty list
+    if (/commit|repo|github|push/.test(t)) {
+      if (!c.github.length) return "No recent GitHub activity found.";
+      return `Recent GitHub activity:\n${c.github.slice(0, 3).map((g) => `• ${g.who} ${g.what} to ${g.repo} (${g.when} ago)`).join("\n")}`;
+    }
+
+    // 4. Important / urgent emails — word boundary so "gmail.com" doesn't match
+    if (/(urgent|important).{0,20}\b(email|mail)\b|\b(email|mail)\b.{0,20}(urgent|important)/.test(t))
+      return `You have ${c.email.important.length} important email${c.email.important.length !== 1 ? "s" : ""}${c.email.important.length ? ":\n" + c.email.important.map((e) => `• ${e.from} — ${e.subject}`).join("\n") : "."}`;
+
+    // 5. General email — word boundary so "gmail.com" doesn't match
+    if (/\b(email|mail|inbox)\b/.test(t))
+      return `You've got ${c.email.unread} unread email${c.email.unread !== 1 ? "s" : ""}, ${c.email.important.length} marked important${c.email.important.length ? ` — from ${c.email.important.map((e) => e.from).join(", ")}` : ""}.`;
+
+    // 6. Tomorrow's calendar
+    if (/\btomorrow\b/.test(t))
+      return c.calendar_tomorrow.length
+        ? `Tomorrow you have ${c.calendar_tomorrow.length} meeting${c.calendar_tomorrow.length !== 1 ? "s" : ""}:\n${c.calendar_tomorrow.map((e) => `• ${e.time} — ${e.title}`).join("\n")}`
+        : "Your calendar is clear tomorrow — nice!";
+
+    // 7. Today / daily summary
     if (/today|happening|summary|catch.*up|brief/.test(t) || t.length < 4) {
       const ghLine = c.github.length
-        ? `• ${c.github[0].who} pushed updates to ${c.github[0].repo}`
+        ? `• ${c.github[0].who} pushed to ${c.github[0].repo} (${c.github[0].when} ago)`
         : "• No recent GitHub activity";
-      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]}\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n${ghLine}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
+      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]}\nHere's your snapshot:\n• ${c.slack.unread} new Slack mention${c.slack.unread !== 1 ? "s" : ""}\n• ${c.calendar_today.length} meeting${c.calendar_today.length !== 1 ? "s" : ""} today\n• ${c.email.unread} new email${c.email.unread !== 1 ? "s" : ""} (${c.email.important.length} important)\n${ghLine}${c.next_meeting ? `\n\nNext: ${c.next_meeting.title} at ${c.next_meeting.time}` : ""}`;
     }
-    return `I can summarize your day, check Slack mentions, urgent emails, GitHub activity, or tomorrow's meetings — and I can create events for you. Try "What's happening today?"`;
+
+    return `I can summarize your day, check Slack mentions, emails, GitHub activity, or create events. Try "What's happening today?"`;
   };
 
   const send = async (text) => {
@@ -1922,19 +1960,19 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
     const history = msgs.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
     setInput(""); setMsgs((p) => [...p, { role: "user", content: q }]); setBusy(true);
 
-    // Demo create-event intent: real side-effect on the local calendar.
-    if (mode !== "live" && /\b(create|schedule|set up|add)\b.*(meeting|event|call)/i.test(q)) {
+    // Create-event intent: always handle locally so addEvent fires regardless of mode.
+    if (/\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)/i.test(q)) {
       const reply = localAnswer(q);
       setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: reply }]); setBusy(false); }, 400);
       return;
     }
 
-    // Live: route through the backend assistant (OpenRouter / Gemma).
+    // Live: route through the backend assistant.
     if (mode === "live") {
       try {
         const res = await fetch(`${API_BASE}/assistant/query`, {
           method: "POST", headers: { "Content-Type": "application/json" },
-          credentials: "include",   // send session cookie for cross-origin requests
+          credentials: "include",
           body: JSON.stringify({ message: q, history }),
         });
         const json = await res.json();
@@ -1945,7 +1983,7 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
       return;
     }
 
-    // Demo: built-in local engine (no backend reachable).
+    // Demo: built-in local engine.
     setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: localAnswer(q) }]); setBusy(false); }, 400);
   };
 
