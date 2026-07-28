@@ -21,7 +21,7 @@ def activity(token: str) -> list[schemas.GithubActivity]:
         me.raise_for_status()
         username = me.json()["login"]
 
-        r = c.get(f"{API}/users/{username}/received_events",
+        r = c.get(f"{API}/users/{username}/events",
                   headers=_headers(token), params={"per_page": 30})
         r.raise_for_status()
 
