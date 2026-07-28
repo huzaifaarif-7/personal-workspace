@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Joyride } from "react-joyride";
 import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
@@ -807,6 +808,61 @@ export default function App() {
   const [newEvent, setNewEvent] = useState(false);
   const [events, setEvents] = useState(data.calendar);
 
+  // --- Tour State ---
+  const [runTour, setRunTour] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
+
+  useEffect(() => {
+    if (user && !localStorage.getItem("hasSeenTour")) {
+      const t = setTimeout(() => { setRunTour(true); }, 1200);
+      return () => clearTimeout(t);
+    }
+  }, [user]);
+
+  const handleJoyrideCallback = (data) => {
+    const { action, index, status, type } = data;
+    if (status === 'finished' || status === 'skipped') {
+      setRunTour(false);
+      localStorage.setItem("hasSeenTour", "true");
+    } else if (type === 'step:after' || type === 'target:not-found') {
+      const nextIndex = index + (action === 'prev' ? -1 : 1);
+      if (nextIndex === 0) {
+        setView('dashboard');
+      } else if (nextIndex === 1) {
+        setView('settings');
+        setNavOpen(false);
+      } else if (nextIndex === 2) {
+        setView('dashboard');
+      }
+      setTourStepIndex(nextIndex);
+    }
+  };
+
+  const tourSteps = [
+    {
+      target: '.tour-integrations',
+      content: 'Connect your favorite tools like GitHub, Gmail, and Slack to bring everything into one workspace.',
+      disableBeacon: true,
+      placement: 'bottom',
+    },
+    {
+      target: '.tour-appearance',
+      content: 'Customize your workspace. Choose from a variety of sleek dark themes and typography.',
+      placement: 'bottom',
+    },
+    {
+      target: '.tour-assistant',
+      content: 'Have a question? Meet your new AI assistant. Click here to chat and get help navigating your work.',
+      placement: 'top-end',
+    },
+    {
+      target: '.tour-notifications',
+      content: 'Never miss an update. Your unread messages and alerts will be neatly tallied up here.',
+      placement: 'bottom-end',
+    }
+  ];
+  // ------------------
+
   const checkAuth = async () => {
     setAuthLoading(true);
     if (!API_BASE) {
@@ -947,6 +1003,29 @@ export default function App() {
     <div className={`hw ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <style>{CSS}</style>
 
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous={true}
+        showSkipButton={true}
+        showProgress={true}
+        stepIndex={tourStepIndex}
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            primaryColor: 'var(--primary)',
+            backgroundColor: 'var(--surface)',
+            textColor: 'var(--text)',
+            arrowColor: 'var(--surface)',
+            overlayColor: 'rgba(0, 0, 0, 0.65)'
+          },
+          tooltipContainer: { textAlign: 'left' },
+          buttonNext: { borderRadius: 6, padding: '8px 16px', fontWeight: 600 },
+          buttonBack: { color: 'var(--text-muted)' },
+          buttonSkip: { color: 'var(--text-muted)' }
+        }}
+      />
+
       {/* ============ SIDEBAR ============ */}
       {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
       <aside className={`side ${navOpen ? "open" : ""}`}>
@@ -994,7 +1073,7 @@ export default function App() {
           { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
           </div> }
-          <button className="icon-btn" style={{ position: "relative" }}>
+          <button className="icon-btn tour-notifications" style={{ position: "relative" }}>
             <Bell size={17} />
             {(unreadSlack + unreadEmail) > 0 && (
               <span style={{
@@ -1043,7 +1122,7 @@ export default function App() {
 
       {/* ============ ASSISTANT FLOATING BUBBLE ============ */}
       {!assistOpen && (
-        <button
+        <button className="tour-assistant"
           onClick={() => setAssistOpen(true)}
           title="Open assistant"
           style={{
@@ -1108,7 +1187,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
     { n: data.github.length, l: "Repo updates", ic: GitCommit, c: "var(--teal)" },
   ];
   return (
-    <div className="grid">
+    <div className="grid tour-integrations">
       {/* hero countdown */}
       <div className="hero" style={{ justifyContent: "center" }}>
         <div className="glyph"><Clock size={26} color="currentColor" /></div>
@@ -1829,7 +1908,7 @@ function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode,
 
       {/* Appearance section */}
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Appearance</div>
-      <div className="card" style={{ marginBottom: 24, padding: 20 }}>
+      <div className="card tour-appearance" style={{ marginBottom: 24, padding: 20 }}>
         <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 12 }}>Theme</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
           {THEMES.map(t => {
