@@ -1578,10 +1578,10 @@ function GithubView({ connections, setConnections }) {
           </div>
           
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {renderList(data.assigned_issues, "Assigned issues", <CheckCircle2 size={15} color="var(--rose)" />, "No open issues assigned to you", (iss) => (
+            {renderList(data.assigned_issues, "Assigned issues", <CircleCheck size={15} color="var(--rose)" />, "No open issues assigned to you", (iss) => (
               <a href={iss.url} target="_blank" rel="noreferrer" className={`row ${(iss.id).unread || (iss.id).isUnread ? "unread" : ""}`} key={iss.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
                 <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
-                  <CheckCircle2 size={15} color="var(--rose)" />
+                  <CircleCheck size={15} color="var(--rose)" />
                 </div>
                 <div className="body">
                   <div className="top"><span className="name"><b>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
@@ -2160,7 +2160,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 2 && <div style={{ display: "grid", gap: 10 }}>
             {["Read your messages & mentions", "View calendar & create events", "Read repository activity", "Read your inbox & flag important mail"].map((p, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 11, fontSize: 13 }}>
-                <CheckCircle2 size={17} color="var(--success)" /> {p}
+                <CircleCheck size={17} color="var(--success)" /> {p}
               </div>
             ))}
             <p style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>You can revoke access anytime from Settings. We never post on your behalf.</p>
