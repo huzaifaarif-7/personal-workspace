@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
   Video, ChevronRight, ChevronLeft, X, Menu, AtSign, GitCommit,
-  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette,
+  Users, ArrowUpRight, CircleCheck, Slack as SlackIcon, Bell, Moon, Palette,
   MessageCircle, Maximize2, Minimize2
 } from "lucide-react";
 import Landing from "./Landing.jsx";
@@ -1898,7 +1898,7 @@ function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode,
                 <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.desc}{live && it.id === "slack" ? " · OAuth" : ""}</div>
               </div>
               {on
-                ? <button className="btn connected" onClick={() => handleDisconnect(it.id)}><CheckCircle2 size={15} /> Connected</button>
+                ? <button className="btn connected" onClick={() => handleDisconnect(it.id)}><CircleCheck size={15} /> Connected</button>
                 : <button className="btn primary" onClick={handleConnect}>{live && isOauth ? "Connect" : "Connect"}</button>}
             </div>
           );
