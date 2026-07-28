@@ -411,7 +411,7 @@ export default function Landing() {
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
             <WorkspaceLogo size={22} showText={true} />
           </div>
-          <span className="footer-copy">© 2025</span>
+          <span className="footer-copy">© 2026</span>
         </div>
         <div className="footer-links">
           <a href="/privacy.html">Privacy policy</a>
