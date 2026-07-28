@@ -994,7 +994,31 @@ export default function App() {
           { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
           </div> }
-          <button className="icon-btn"><Bell size={17} /><span className="dot" /></button>
+          <button className="icon-btn" style={{ position: "relative" }}>
+            <Bell size={17} />
+            {(unreadSlack + unreadEmail) > 0 && (
+              <span style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                background: "var(--danger)",
+                color: "#fff",
+                fontSize: 9,
+                fontWeight: 700,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 3px",
+                border: "2px solid var(--surface)",
+                transform: "translate(30%, -30%)"
+              }}>
+                {(unreadSlack + unreadEmail) > 99 ? "99+" : (unreadSlack + unreadEmail)}
+              </span>
+            )}
+          </button>
         </header>
 
         <div className="scroll">
