@@ -993,24 +993,7 @@ export default function App() {
           <ThemePicker current={theme} onChange={handleThemeChange} />
           { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
-            {/* { <p>{dateStr} · Here's everything across your workspace</p>} */}
           </div> }
-          <div className="search">
-            <Search size={15} />
-            <input placeholder="Search messages, events, repos…" />
-          </div>
-          <div title={mode === "live" ? "Connected to your backend — showing live data"
-              : mode === "loading" ? "Connecting to backend…"
-              : "Backend not reachable — showing demo data"}
-            style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px",
-              borderRadius: 11, border: "1px solid var(--border)", background: "var(--inset)",
-              fontSize: 12, fontWeight: 600, flex: "none",
-              color: mode === "live" ? "var(--success)" : mode === "loading" ? "var(--danger)" : "var(--text-muted)" }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%",
-              background: mode === "live" ? "var(--success)" : mode === "loading" ? "var(--danger)" : "var(--text-muted)" }}
-              className={mode === "live" ? "" : ""} />
-            {/* {mode === "live" ? "Live" : mode === "loading" ? "Syncing" : "Demo"} */}
-          </div>
           <button className="icon-btn"><Bell size={17} /><span className="dot" /></button>
         </header>
 
@@ -1843,7 +1826,7 @@ function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode,
                   whiteSpace: "nowrap",
                 }}
               >
-                {t.name}
+                {t.label}
               </button>
             );
           })}
@@ -1881,7 +1864,7 @@ function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode,
       <div style={{ display: "grid", gap: 12 }}>
         {integrations.map((it) => {
           const internalToConnections = { gh: "github", gcal: "calendar", email: "email", slack: "slack" };
-          const Ic = intIcon[it.id]; 
+          const Ic = intIcon[it.id] || Settings; 
           const on = connections?.[internalToConnections[it.id]]?.connected;
           const isOauth = oauthIds.includes(it.id);
           const handleConnect = () => {
@@ -2159,7 +2142,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
 
           {step === 1 && <div style={{ display: "grid", gap: 10 }}>
             {integrations.map((it) => {
-              const Ic = intIcon[it.id]; const on = conn[it.id] || (mode === "live" && it.connected);
+              const Ic = intIcon[it.id] || Settings; const on = conn[it.id] || (mode === "live" && it.connected);
               const isOauth = ["gh", "gcal", "email", "slack"].includes(it.id);
               return (
                 <div className="conn-card" key={it.id} style={{ padding: 13 }}>
