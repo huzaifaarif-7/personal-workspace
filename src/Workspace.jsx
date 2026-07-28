@@ -1949,14 +1949,17 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
   const localAnswer = (q) => {
     const t = q.toLowerCase(); const c = context();
 
-    // Person extraction: "from Soha", "by Soha", "did Soha message"
-    const personMatch = q.match(/\b(?:from|by|about|with)\s+([A-Za-z][a-zA-Z]+)/i)
-      || q.match(/\b([A-Za-z][a-zA-Z]+)\s+(?:message|mentioned|dm|email|mail|commit|push)/i);
-    const person = personMatch ? personMatch[1].toLowerCase() : null;
+    // Person extraction — single word only, skip question/stop words
+    const _personStop = new Set(["who", "what", "when", "where", "which", "how", "me", "i",
+      "my", "you", "we", "us", "text", "message", "send", "last", "latest", "any"]);
+    const personMatch = q.match(/\b(?:from|by|about|with|did|has)\s+([A-Za-z][a-zA-Z]+)/i)
+      || q.match(/\b([A-Za-z][a-zA-Z]+)\s+(?:message|mentioned|dm|email|mail|commit|push)\b/i);
+    const _personRaw = personMatch ? personMatch[1] : null;
+    const person = _personRaw && !_personStop.has(_personRaw.toLowerCase()) ? _personRaw.toLowerCase() : null;
 
     // 1. Create / schedule event — FIRST to avoid false matches with "important", "gmail", etc.
     if (/\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)/i.test(q)) {
-      const mMatch = t.match(/(\d{1,2})\s*(am|pm)/);
+      const mMatch = t.match(/(\d{1,2})(?::\d{2})?\s*(am|pm)/i);
       let hh = 17;
       if (mMatch) { hh = parseInt(mMatch[1]); if (mMatch[2] === "pm" && hh < 12) hh += 12; if (mMatch[2] === "am" && hh === 12) hh = 0; }
       const isTomorrow = /\btomorrow\b/.test(t);
@@ -1972,8 +1975,8 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
       let mentions = [...c.slack.mentions];
       if (person) {
         mentions = mentions.filter((m) => m.from.toLowerCase().includes(person));
-        if (!mentions.length) return `No Slack messages from "${personMatch[1]}" found.`;
-        return `Slack message from ${personMatch[1]}:\n• ${mentions[0].from} in ${mentions[0].channel} (${mentions[0].when}) — "${mentions[0].text}"`;
+        if (!mentions.length) return `No Slack messages from "${_personRaw}" found.`;
+        return `Slack message from ${_personRaw}:\n• ${mentions[0].from} in ${mentions[0].channel} (${mentions[0].when}) — "${mentions[0].text}"`;
       }
       if (!mentions.length) return "No new Slack mentions right now.";
       if (/\b(recently|latest|last|most recent)\b/.test(t) || /who.*(mention|tagged)/.test(t)) {
@@ -1989,11 +1992,11 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
     }
 
     // 4. Important / urgent emails — word boundary so "gmail.com" doesn't match
-    if (/(urgent|important).{0,20}\b(email|mail)\b|\b(email|mail)\b.{0,20}(urgent|important)/.test(t))
+    if (/(urgent|important).{0,20}\b(emails?|mail)\b|\b(emails?|mail)\b.{0,20}(urgent|important)/.test(t))
       return `You have ${c.email.important.length} important email${c.email.important.length !== 1 ? "s" : ""}${c.email.important.length ? ":\n" + c.email.important.map((e) => `• ${e.from} — ${e.subject}`).join("\n") : "."}`;
 
     // 5. General email — word boundary so "gmail.com" doesn't match
-    if (/\b(email|mail|inbox)\b/.test(t))
+    if (/\b(emails?|mail|inbox)\b/.test(t))
       return `You've got ${c.email.unread} unread email${c.email.unread !== 1 ? "s" : ""}, ${c.email.important.length} marked important${c.email.important.length ? ` — from ${c.email.important.map((e) => e.from).join(", ")}` : ""}.`;
 
     // 6. Tomorrow's calendar
@@ -2021,6 +2024,17 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
     // Create-event intent: always handle locally so addEvent fires regardless of mode.
     if (/\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)/i.test(q)) {
       const reply = localAnswer(q);
+      setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: reply }]); setBusy(false); }, 400);
+      return;
+    }
+
+    // Meeting time correction: "not 12pm I said 4pm", "I meant 3pm", "change it to 5pm"
+    // Re-run create-event with the corrected time if the last assistant message was a meeting creation.
+    const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+    const wasJustCreated = lastAssistant?.content?.includes("I've added") && lastAssistant?.content?.includes("calendar");
+    if (wasJustCreated && /(\d{1,2})(?::\d{2})?\s*(am|pm)/i.test(q)) {
+      const syntheticCreate = `create a meeting today at ${q.match(/(\d{1,2}(?::\d{2})?)\s*(am|pm)/i)?.[0] || "5pm"}`;
+      const reply = localAnswer(syntheticCreate);
       setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: reply }]); setBusy(false); }, 400);
       return;
     }
