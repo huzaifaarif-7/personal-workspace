@@ -32,6 +32,7 @@ from .auth_routes import (                                # new User Auth routes
     auth_router as local_auth_router,
     user_router as local_user_router,
 )
+from .assistant_routes import router as assistant_router  # AI assistant
 # Route modules — only import modules that define `router = APIRouter(...)`
 from . import dashboard, calendar
 from fastapi.responses import JSONResponse
@@ -131,6 +132,9 @@ app.include_router(local_user_router, prefix=settings.api_prefix)
 # Slack OAuth + data routes
 app.include_router(slack_auth_router, prefix=settings.api_prefix)
 app.include_router(slack_router, prefix=settings.api_prefix)
+
+# AI assistant
+app.include_router(assistant_router, prefix=settings.api_prefix)
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
