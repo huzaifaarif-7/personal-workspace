@@ -1028,7 +1028,7 @@ export default function App() {
           {view === "email" && <EmailView email={data.email} connections={connections} setConnections={setConnections} />}
           {view === "settings" && (
             <SettingsErrorBoundary>
-              <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections} />
+              <SettingsView user={user} setUser={setUser} theme={theme} onThemeChange={handleThemeChange} integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections} />
             </SettingsErrorBoundary>
           )}
         </div>
@@ -1742,10 +1742,13 @@ class SettingsErrorBoundary extends React.Component {
 }
 
 /* ---------------------------- Settings ---------------------------- */
-function SettingsView({ integrations, mode, onConnect, connections, setConnections }) {
+function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode, onConnect, connections, setConnections }) {
   const [activeFont, setActiveFont] = useState(
     () => localStorage.getItem("workspace-font") || "Inter"
   );
+  const [editName, setEditName] = useState(false);
+  const [nameInput, setNameInput] = useState(user?.full_name || "");
+
   const live = mode === "live";
   const oauthIds = ["gh", "gcal", "email", "slack"];
 
@@ -1782,9 +1785,69 @@ function SettingsView({ integrations, mode, onConnect, connections, setConnectio
     <div>
       <ViewHead title="Settings" sub="Manage your connected tools & workspace" />
 
+      {/* Profile section */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Profile</div>
+      <div className="card" style={{ marginBottom: 24, padding: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 4 }}>Name</div>
+            {editName ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <input 
+                  type="text" 
+                  value={nameInput} 
+                  onChange={e => setNameInput(e.target.value)}
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", padding: "6px 12px", borderRadius: 6, color: "var(--text)", fontSize: 14 }}
+                />
+                <button className="btn primary" onClick={() => {
+                  setUser({ ...user, full_name: nameInput });
+                  setEditName(false);
+                }}>Save</button>
+                <button className="btn ghost" onClick={() => {
+                  setNameInput(user?.full_name || "");
+                  setEditName(false);
+                }}>Cancel</button>
+              </div>
+            ) : (
+              <div style={{ fontSize: 14, color: "var(--text)" }}>{user?.full_name}</div>
+            )}
+          </div>
+          {!editName && <button className="btn" onClick={() => setEditName(true)}>Edit</button>}
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 4 }}>Email</div>
+          <div style={{ fontSize: 14, color: "var(--text-muted)" }}>{user?.email}</div>
+        </div>
+      </div>
+
       {/* Appearance section */}
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Appearance</div>
       <div className="card" style={{ marginBottom: 24, padding: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 12 }}>Theme</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+          {THEMES.map(t => {
+            const active = theme === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => onThemeChange(t.id)}
+                style={{
+                  fontSize: 13,
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  border: active ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                  background: active ? "var(--primary-bg)" : "var(--surface)",
+                  color: active ? "var(--primary)" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "border .15s, background .15s, color .15s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t.name}
+              </button>
+            );
+          })}
+        </div>
         <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 12 }}>Font</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {FONTS.map(font => {
