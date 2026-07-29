@@ -1,18 +1,14 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
+import { Joyride } from "react-joyride";
 import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
   Video, ChevronRight, ChevronLeft, X, Menu, AtSign, GitCommit,
-  Users, ArrowUpRight, CheckCircle2, Slack as SlackIcon, Bell, Moon, Palette,
+  Users, ArrowUpRight, CircleCheck, Slack as SlackIcon, Bell, Moon, Palette,
   MessageCircle, Maximize2, Minimize2
 } from "lucide-react";
 import Landing from "./Landing.jsx";
-
-const Logo = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 2L22 20H2L12 2Z" />
-  </svg>
-);
+import WorkspaceLogo from "./components/WorkspaceLogo.jsx";
 
 /* =========================================================================
    Huzaifa's Workspace — AI-powered personal productivity command center
@@ -553,9 +549,8 @@ function AuthView({ onAuthSuccess }) {
   return (
     <div className="auth-wrap">
       
-        <div className="auth-header">
-          <Logo size={32} />
-          <div className="auth-title">Workspace</div>
+        <div className="auth-header" style={{ display: "flex", justifyContent: "center" }}>
+          <WorkspaceLogo size={40} showText={true} />
         </div>
         
         <div className="auth-card">
@@ -813,6 +808,61 @@ export default function App() {
   const [newEvent, setNewEvent] = useState(false);
   const [events, setEvents] = useState(data.calendar);
 
+  // --- Tour State ---
+  const [runTour, setRunTour] = useState(false);
+  const [tourStepIndex, setTourStepIndex] = useState(0);
+
+  useEffect(() => {
+    if (user && !localStorage.getItem("hasSeenTour")) {
+      const t = setTimeout(() => { setRunTour(true); }, 1200);
+      return () => clearTimeout(t);
+    }
+  }, [user]);
+
+  const handleJoyrideCallback = (data) => {
+    const { action, index, status, type } = data;
+    if (status === 'finished' || status === 'skipped') {
+      setRunTour(false);
+      localStorage.setItem("hasSeenTour", "true");
+    } else if (type === 'step:after' || type === 'target:not-found') {
+      const nextIndex = index + (action === 'prev' ? -1 : 1);
+      if (nextIndex === 0) {
+        setView('dashboard');
+      } else if (nextIndex === 1) {
+        setView('settings');
+        setNavOpen(false);
+      } else if (nextIndex === 2) {
+        setView('dashboard');
+      }
+      setTourStepIndex(nextIndex);
+    }
+  };
+
+  const tourSteps = [
+    {
+      target: '.tour-integrations',
+      content: 'Connect your favorite tools like GitHub, Gmail, and Slack to bring everything into one workspace.',
+      disableBeacon: true,
+      placement: 'bottom',
+    },
+    {
+      target: '.tour-appearance',
+      content: 'Customize your workspace. Choose from a variety of sleek dark themes and typography.',
+      placement: 'bottom',
+    },
+    {
+      target: '.tour-assistant',
+      content: 'Have a question? Meet your new AI assistant. Click here to chat and get help navigating your work.',
+      placement: 'top-end',
+    },
+    {
+      target: '.tour-notifications',
+      content: 'Never miss an update. Your unread messages and alerts will be neatly tallied up here.',
+      placement: 'bottom-end',
+    }
+  ];
+  // ------------------
+
   const checkAuth = async () => {
     setAuthLoading(true);
     if (!API_BASE) {
@@ -953,15 +1003,34 @@ export default function App() {
     <div className={`hw ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <style>{CSS}</style>
 
+      <Joyride
+        steps={tourSteps}
+        run={runTour}
+        continuous={true}
+        showSkipButton={true}
+        showProgress={true}
+        stepIndex={tourStepIndex}
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            primaryColor: 'var(--primary)',
+            backgroundColor: 'var(--surface)',
+            textColor: 'var(--text)',
+            arrowColor: 'var(--surface)',
+            overlayColor: 'rgba(0, 0, 0, 0.65)'
+          },
+          tooltipContainer: { textAlign: 'left' },
+          buttonNext: { borderRadius: 6, padding: '8px 16px', fontWeight: 600 },
+          buttonBack: { color: 'var(--text-muted)' },
+          buttonSkip: { color: 'var(--text-muted)' }
+        }}
+      />
+
       {/* ============ SIDEBAR ============ */}
       {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
       <aside className={`side ${navOpen ? "open" : ""}`}>
         <div className="brand">
-          <Logo size={32} />
-          <div>
-            <div className="brand-name hw-display">Workspace</div>
-            <div className="brand-sub">{user.full_name.split(' ')[0]}'s command center</div>
-          </div>
+          <WorkspaceLogo size={28} showText={true} />
           <button className="icon-btn side-close" style={{ marginLeft: "auto" }} onClick={() => setNavOpen(false)}><X size={16} /></button>
         </div>
         <div className="nav-label">Menu</div>
@@ -1003,25 +1072,32 @@ export default function App() {
           <ThemePicker current={theme} onChange={handleThemeChange} />
           { <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
-            {/* { <p>{dateStr} · Here's everything across your workspace</p>} */}
           </div> }
-          <div className="search">
-            <Search size={15} />
-            <input placeholder="Search messages, events, repos…" />
-          </div>
-          <div title={mode === "live" ? "Connected to your backend — showing live data"
-              : mode === "loading" ? "Connecting to backend…"
-              : "Backend not reachable — showing demo data"}
-            style={{ display: "flex", alignItems: "center", gap: 7, padding: "8px 12px",
-              borderRadius: 11, border: "1px solid var(--border)", background: "var(--inset)",
-              fontSize: 12, fontWeight: 600, flex: "none",
-              color: mode === "live" ? "var(--success)" : mode === "loading" ? "var(--danger)" : "var(--text-muted)" }}>
-            <span style={{ width: 8, height: 8, borderRadius: "50%",
-              background: mode === "live" ? "var(--success)" : mode === "loading" ? "var(--danger)" : "var(--text-muted)" }}
-              className={mode === "live" ? "" : ""} />
-            {/* {mode === "live" ? "Live" : mode === "loading" ? "Syncing" : "Demo"} */}
-          </div>
-          <button className="icon-btn"><Bell size={17} /><span className="dot" /></button>
+          <button className="icon-btn tour-notifications" style={{ position: "relative" }}>
+            <Bell size={17} />
+            {(unreadSlack + unreadEmail) > 0 && (
+              <span style={{
+                position: "absolute",
+                top: 0,
+                right: 0,
+                background: "var(--danger)",
+                color: "#fff",
+                fontSize: 9,
+                fontWeight: 700,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "0 3px",
+                border: "2px solid var(--surface)",
+                transform: "translate(30%, -30%)"
+              }}>
+                {(unreadSlack + unreadEmail) > 99 ? "99+" : (unreadSlack + unreadEmail)}
+              </span>
+            )}
+          </button>
         </header>
 
         <div className="scroll">
@@ -1038,7 +1114,7 @@ export default function App() {
           {view === "email" && <EmailView email={data.email} connections={connections} setConnections={setConnections} />}
           {view === "settings" && (
             <SettingsErrorBoundary>
-              <SettingsView integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections} />
+              <SettingsView user={user} setUser={setUser} theme={theme} onThemeChange={handleThemeChange} integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections} />
             </SettingsErrorBoundary>
           )}
         </div>
@@ -1046,7 +1122,7 @@ export default function App() {
 
       {/* ============ ASSISTANT FLOATING BUBBLE ============ */}
       {!assistOpen && (
-        <button
+        <button className="tour-assistant"
           onClick={() => setAssistOpen(true)}
           title="Open assistant"
           style={{
@@ -1111,7 +1187,7 @@ function Dashboard({ data, events, todayEvents, unreadSlack, unreadEmail, onNewE
     { n: data.github.length, l: "Repo updates", ic: GitCommit, c: "var(--teal)" },
   ];
   return (
-    <div className="grid">
+    <div className="grid tour-integrations">
       {/* hero countdown */}
       <div className="hero" style={{ justifyContent: "center" }}>
         <div className="glyph"><Clock size={26} color="currentColor" /></div>
@@ -1605,10 +1681,10 @@ function GithubView({ connections, setConnections }) {
           </div>
           
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {renderList(data.assigned_issues, "Assigned issues", <CheckCircle2 size={15} color="var(--rose)" />, "No open issues assigned to you", (iss) => (
+            {renderList(data.assigned_issues, "Assigned issues", <CircleCheck size={15} color="var(--rose)" />, "No open issues assigned to you", (iss) => (
               <a href={iss.url} target="_blank" rel="noreferrer" className={`row ${(iss.id).unread || (iss.id).isUnread ? "unread" : ""}`} key={iss.id} style={{ textDecoration: "none", color: "inherit", display: "flex" }}>
                 <div className="ic" style={{ width: 34, height: 34, borderRadius: 10, background: "var(--inset)", border: "1px solid var(--border)", display: "grid", placeItems: "center", flex: "none" }}>
-                  <CheckCircle2 size={15} color="var(--rose)" />
+                  <CircleCheck size={15} color="var(--rose)" />
                 </div>
                 <div className="body">
                   <div className="top"><span className="name"><b>{iss.repo}</b></span><span className="time">{timeAgo(iss.updated_at)}</span></div>
@@ -1752,10 +1828,13 @@ class SettingsErrorBoundary extends React.Component {
 }
 
 /* ---------------------------- Settings ---------------------------- */
-function SettingsView({ integrations, mode, onConnect, connections, setConnections }) {
+function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode, onConnect, connections, setConnections }) {
   const [activeFont, setActiveFont] = useState(
     () => localStorage.getItem("workspace-font") || "Inter"
   );
+  const [editName, setEditName] = useState(false);
+  const [nameInput, setNameInput] = useState(user?.full_name || "");
+
   const live = mode === "live";
   const oauthIds = ["gh", "gcal", "email", "slack"];
 
@@ -1792,9 +1871,69 @@ function SettingsView({ integrations, mode, onConnect, connections, setConnectio
     <div>
       <ViewHead title="Settings" sub="Manage your connected tools & workspace" />
 
+      {/* Profile section */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Profile</div>
+      <div className="card" style={{ marginBottom: 24, padding: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 4 }}>Name</div>
+            {editName ? (
+              <div style={{ display: "flex", gap: 8 }}>
+                <input 
+                  type="text" 
+                  value={nameInput} 
+                  onChange={e => setNameInput(e.target.value)}
+                  style={{ background: "var(--bg)", border: "1px solid var(--border)", padding: "6px 12px", borderRadius: 6, color: "var(--text)", fontSize: 14 }}
+                />
+                <button className="btn primary" onClick={() => {
+                  setUser({ ...user, full_name: nameInput });
+                  setEditName(false);
+                }}>Save</button>
+                <button className="btn ghost" onClick={() => {
+                  setNameInput(user?.full_name || "");
+                  setEditName(false);
+                }}>Cancel</button>
+              </div>
+            ) : (
+              <div style={{ fontSize: 14, color: "var(--text)" }}>{user?.full_name}</div>
+            )}
+          </div>
+          {!editName && <button className="btn" onClick={() => setEditName(true)}>Edit</button>}
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 4 }}>Email</div>
+          <div style={{ fontSize: 14, color: "var(--text-muted)" }}>{user?.email}</div>
+        </div>
+      </div>
+
       {/* Appearance section */}
       <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "4px 0 14px" }}>Appearance</div>
-      <div className="card" style={{ marginBottom: 24, padding: 20 }}>
+      <div className="card tour-appearance" style={{ marginBottom: 24, padding: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 12 }}>Theme</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 24 }}>
+          {THEMES.map(t => {
+            const active = theme === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => onThemeChange(t.id)}
+                style={{
+                  fontSize: 13,
+                  padding: "7px 14px",
+                  borderRadius: 8,
+                  border: active ? "1.5px solid var(--primary)" : "1px solid var(--border)",
+                  background: active ? "var(--primary-bg)" : "var(--surface)",
+                  color: active ? "var(--primary)" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "border .15s, background .15s, color .15s",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
         <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 12 }}>Font</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {FONTS.map(font => {
@@ -1828,7 +1967,7 @@ function SettingsView({ integrations, mode, onConnect, connections, setConnectio
       <div style={{ display: "grid", gap: 12 }}>
         {integrations.map((it) => {
           const internalToConnections = { gh: "github", gcal: "calendar", email: "email", slack: "slack" };
-          const Ic = intIcon[it.id]; 
+          const Ic = intIcon[it.id] || Settings; 
           const on = connections?.[internalToConnections[it.id]]?.connected;
           const isOauth = oauthIds.includes(it.id);
           const handleConnect = () => {
@@ -1845,7 +1984,7 @@ function SettingsView({ integrations, mode, onConnect, connections, setConnectio
                 <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>{it.desc}{live && it.id === "slack" ? " · OAuth" : ""}</div>
               </div>
               {on
-                ? <button className="btn connected" onClick={() => handleDisconnect(it.id)}><CheckCircle2 size={15} /> Connected</button>
+                ? <button className="btn connected" onClick={() => handleDisconnect(it.id)}><CircleCheck size={15} /> Connected</button>
                 : <button className="btn primary" onClick={handleConnect}>{live && isOauth ? "Connect" : "Connect"}</button>}
             </div>
           );
@@ -1892,34 +2031,77 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
     };
   };
 
-  /* offline fallback so the assistant always answers */
+  /* offline fallback — also used for create-event in all modes */
   const localAnswer = (q) => {
     const t = q.toLowerCase(); const c = context();
-    if (/(urgent|important).*(email|mail)|email.*(urgent|important)/.test(t) || (/email|mail|inbox/.test(t) && /urgent|important/.test(t)))
-      return `You have ${c.email.important.length} important email${c.email.important.length !== 1 ? "s" : ""}:\n${c.email.important.map((e) => `• ${e.from} — ${e.subject}`).join("\n")}`;
-    if (/email|mail|inbox/.test(t))
-      return `You've got ${c.email.unread} unread emails, ${c.email.important.length} marked important — most notably from ${c.email.important.map((e) => e.from).join(" and ")}.`;
-    if (/commit|repo|github|push/.test(t))
-      return `Recent GitHub activity:\n${c.github.slice(0, 3).map((g) => `• ${g.who} ${g.what} to ${g.repo} (${g.when} ago)`).join("\n")}`;
-    if (/tomorrow/.test(t))
-      return c.calendar_tomorrow.length ? `Tomorrow you have ${c.calendar_tomorrow.length} meetings:\n${c.calendar_tomorrow.map((e) => `• ${e.time} — ${e.title}`).join("\n")}` : "Your calendar is clear tomorrow — nice";
-    if (/slack|mention|tagged/.test(t))
-      return `You were mentioned by ${c.slack.mentions.map((m) => m.from).join(", ")}.\nMost recent: ${c.slack.mentions[0].from} in ${c.slack.mentions[0].channel} — "${c.slack.mentions[0].text}"`;
-    if (/create|schedule|set up|add.*(meeting|event|call)|meeting.*tomorrow/.test(t)) {
-      const m = t.match(/(\d{1,2})\s*(am|pm)/);
-      let hh = 17; if (m) { hh = parseInt(m[1]); if (m[2] === "pm" && hh < 12) hh += 12; if (m[2] === "am" && hh === 12) hh = 0; }
-      const tomorrow = /tomorrow/.test(t); const d = new Date(); if (tomorrow) d.setDate(d.getDate() + 1); d.setHours(hh, 0, 0, 0);
-      const ev = { id: "ai" + Date.now(), title: "New Meeting", start: d, end: new Date(d.getTime() + 30 * 60000), priority: "medium", location: "Google Meet", meet: true };
+
+    // Person extraction — single word only, skip question/stop words
+    const _personStop = new Set(["who", "what", "when", "where", "which", "how", "me", "i",
+      "my", "you", "we", "us", "text", "message", "send", "last", "latest", "any"]);
+    const personMatch = q.match(/\b(?:from|by|about|with|did|has)\s+([A-Za-z][a-zA-Z]+)/i)
+      || q.match(/\b([A-Za-z][a-zA-Z]+)\s+(?:message|mentioned|dm|email|mail|commit|push)\b/i);
+    const _personRaw = personMatch ? personMatch[1] : null;
+    const person = _personRaw && !_personStop.has(_personRaw.toLowerCase()) ? _personRaw.toLowerCase() : null;
+
+    // 1. Create / schedule event — FIRST to avoid false matches with "important", "gmail", etc.
+    if (/\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)/i.test(q)) {
+      const mMatch = t.match(/(\d{1,2})(?::\d{2})?\s*(am|pm)/i);
+      let hh = 17;
+      if (mMatch) { hh = parseInt(mMatch[1]); if (mMatch[2] === "pm" && hh < 12) hh += 12; if (mMatch[2] === "am" && hh === 12) hh = 0; }
+      const isTomorrow = /\btomorrow\b/.test(t);
+      const priority = /\b(important|urgent|high.?priority)\b/i.test(q) ? "high" : "medium";
+      const d = new Date(); if (isTomorrow) d.setDate(d.getDate() + 1); d.setHours(hh, 0, 0, 0);
+      const ev = { id: "ai" + Date.now(), title: "New Meeting", start: d, end: new Date(d.getTime() + 30 * 60000), priority, location: "Google Meet", meet: true };
       addEvent(ev);
-      return `Done I've added "New Meeting" to your calendar for ${tomorrow ? "tomorrow" : "today"} at ${fmtTime(d)} with a Google Meet link. You can rename it from the Calendar tab.`;
+      return `Done! I've added "New Meeting" to your calendar for ${isTomorrow ? "tomorrow" : "today"} at ${fmtTime(d)}${priority === "high" ? " (marked important)" : ""}. Rename it from the Calendar tab if needed.`;
     }
+
+    // 2. Slack — labeled block format
+    if (/\bslack\b|\bmentioned?\b|\btagged\b|\bdm\b/.test(t)) {
+      const fmtSlack = (m) =>
+        `From: ${m.from}\nChannel: ${m.channel || "DM"}\nTime: ${m.when} ago\nMessage:\n${m.text}`;
+      let mentions = [...c.slack.mentions];
+      if (person) {
+        mentions = mentions.filter((m) => m.from.toLowerCase().includes(person));
+        if (!mentions.length) return `No Slack messages from "${_personRaw}" found.`;
+        return `Message from ${_personRaw}:\n\n${fmtSlack(mentions[0])}`;
+      }
+      if (!mentions.length) return "No new Slack mentions right now.";
+      if (/\b(recently|latest|last|most recent)\b/.test(t) || /who.*(mention|tagged)/.test(t)) {
+        return `Most recent mention:\n\n${fmtSlack(mentions[0])}`;
+      }
+      return `Recent Slack mentions:\n\n${mentions.map(fmtSlack).join("\n\n" + "─".repeat(20) + "\n\n")}`;
+    }
+
+    // 3. GitHub — guard against empty list
+    if (/commit|repo|github|push/.test(t)) {
+      if (!c.github.length) return "No recent GitHub activity found.";
+      return `Recent GitHub activity:\n${c.github.slice(0, 3).map((g) => `• ${g.who} ${g.what} to ${g.repo} (${g.when} ago)`).join("\n")}`;
+    }
+
+    // 4. Important / urgent emails — word boundary so "gmail.com" doesn't match
+    if (/(urgent|important).{0,20}\b(emails?|mail)\b|\b(emails?|mail)\b.{0,20}(urgent|important)/.test(t))
+      return `You have ${c.email.important.length} important email${c.email.important.length !== 1 ? "s" : ""}${c.email.important.length ? ":\n" + c.email.important.map((e) => `• ${e.from} — ${e.subject}`).join("\n") : "."}`;
+
+    // 5. General email — word boundary so "gmail.com" doesn't match
+    if (/\b(emails?|mail|inbox)\b/.test(t))
+      return `You've got ${c.email.unread} unread email${c.email.unread !== 1 ? "s" : ""}, ${c.email.important.length} marked important${c.email.important.length ? ` — from ${c.email.important.map((e) => e.from).join(", ")}` : ""}.`;
+
+    // 6. Tomorrow's calendar
+    if (/\btomorrow\b/.test(t))
+      return c.calendar_tomorrow.length
+        ? `Tomorrow you have ${c.calendar_tomorrow.length} meeting${c.calendar_tomorrow.length !== 1 ? "s" : ""}:\n${c.calendar_tomorrow.map((e) => `• ${e.time} — ${e.title}`).join("\n")}`
+        : "Your calendar is clear tomorrow — nice!";
+
+    // 7. Today / daily summary
     if (/today|happening|summary|catch.*up|brief/.test(t) || t.length < 4) {
       const ghLine = c.github.length
-        ? `• ${c.github[0].who} pushed updates to ${c.github[0].repo}`
+        ? `• ${c.github[0].who} pushed to ${c.github[0].repo} (${c.github[0].when} ago)`
         : "• No recent GitHub activity";
-      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]}\nHere's your snapshot:\n• ${c.slack.unread} new Slack mentions\n• ${c.calendar_today.length} meetings today\n• ${c.email.unread} new emails (${c.email.important.length} important)\n${ghLine}\n${c.next_meeting ? `\nYour next meeting is ${c.next_meeting.title} at ${c.next_meeting.time}.` : ""}`;
+      return `Good ${new Date().getHours() < 12 ? "morning" : "afternoon"} ${user.full_name.split(' ')[0]}\nHere's your snapshot:\n• ${c.slack.unread} new Slack mention${c.slack.unread !== 1 ? "s" : ""}\n• ${c.calendar_today.length} meeting${c.calendar_today.length !== 1 ? "s" : ""} today\n• ${c.email.unread} new email${c.email.unread !== 1 ? "s" : ""} (${c.email.important.length} important)\n${ghLine}${c.next_meeting ? `\n\nNext: ${c.next_meeting.title} at ${c.next_meeting.time}` : ""}`;
     }
-    return `I can summarize your day, check Slack mentions, urgent emails, GitHub activity, or tomorrow's meetings — and I can create events for you. Try "What's happening today?"`;
+
+    return `I can summarize your day, check Slack mentions, emails, GitHub activity, or create events. Try "What's happening today?"`;
   };
 
   const send = async (text) => {
@@ -1927,19 +2109,30 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
     const history = msgs.filter((m) => m.role !== "system").map((m) => ({ role: m.role, content: m.content }));
     setInput(""); setMsgs((p) => [...p, { role: "user", content: q }]); setBusy(true);
 
-    // Demo create-event intent: real side-effect on the local calendar.
-    if (mode !== "live" && /\b(create|schedule|set up|add)\b.*(meeting|event|call)/i.test(q)) {
+    // Create-event intent: always handle locally so addEvent fires regardless of mode.
+    if (/\b(create|schedule|set up|add|book)\b.{0,40}(meeting|event|call|appointment)/i.test(q)) {
       const reply = localAnswer(q);
       setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: reply }]); setBusy(false); }, 400);
       return;
     }
 
-    // Live: route through the backend assistant (OpenRouter / Gemma).
+    // Meeting time correction: "not 12pm I said 4pm", "I meant 3pm", "change it to 5pm"
+    // Re-run create-event with the corrected time if the last assistant message was a meeting creation.
+    const lastAssistant = [...msgs].reverse().find((m) => m.role === "assistant");
+    const wasJustCreated = lastAssistant?.content?.includes("I've added") && lastAssistant?.content?.includes("calendar");
+    if (wasJustCreated && /(\d{1,2})(?::\d{2})?\s*(am|pm)/i.test(q)) {
+      const syntheticCreate = `create a meeting today at ${q.match(/(\d{1,2}(?::\d{2})?)\s*(am|pm)/i)?.[0] || "5pm"}`;
+      const reply = localAnswer(syntheticCreate);
+      setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: reply }]); setBusy(false); }, 400);
+      return;
+    }
+
+    // Live: route through the backend assistant.
     if (mode === "live") {
       try {
         const res = await fetch(`${API_BASE}/assistant/query`, {
           method: "POST", headers: { "Content-Type": "application/json" },
-          credentials: "include",   // send session cookie for cross-origin requests
+          credentials: "include",
           body: JSON.stringify({ message: q, history }),
         });
         const json = await res.json();
@@ -1950,7 +2143,7 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
       return;
     }
 
-    // Demo: built-in local engine (no backend reachable).
+    // Demo: built-in local engine.
     setTimeout(() => { setMsgs((p) => [...p, { role: "assistant", content: localAnswer(q) }]); setBusy(false); }, 400);
   };
 
@@ -2040,7 +2233,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 1 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Connect your tools</h2>}
           {step === 2 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Grant permissions</h2>}
           {step === 3 && <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <Logo size={32} />
+            <WorkspaceLogo size={32} />
             <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>You're all set!</h2>
           </div>}
         </div>
@@ -2052,7 +2245,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
 
           {step === 1 && <div style={{ display: "grid", gap: 10 }}>
             {integrations.map((it) => {
-              const Ic = intIcon[it.id]; const on = conn[it.id] || (mode === "live" && it.connected);
+              const Ic = intIcon[it.id] || Settings; const on = conn[it.id] || (mode === "live" && it.connected);
               const isOauth = ["gh", "gcal", "email", "slack"].includes(it.id);
               return (
                 <div className="conn-card" key={it.id} style={{ padding: 13 }}>
@@ -2070,7 +2263,7 @@ function Onboarding({ user, integrations, mode, onConnect, onDone }) {
           {step === 2 && <div style={{ display: "grid", gap: 10 }}>
             {["Read your messages & mentions", "View calendar & create events", "Read repository activity", "Read your inbox & flag important mail"].map((p, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 11, fontSize: 13 }}>
-                <CheckCircle2 size={17} color="var(--success)" /> {p}
+                <CircleCheck size={17} color="var(--success)" /> {p}
               </div>
             ))}
             <p style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>You can revoke access anytime from Settings. We never post on your behalf.</p>
