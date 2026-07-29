@@ -32,16 +32,22 @@ class LoginRequest(BaseModel):
 class PreferencesRequest(BaseModel):
     theme: str | None = None
     font: str | None = None
+    tour_completed: bool | None = None
 
 def _serialize_user(user: User) -> dict[str, Any]:
-    prefs = {"theme": "dark", "font": "Inter"}
+    prefs = {"theme": "dark", "font": "Inter", "tour_completed": False}
     if user.preferences:
-        prefs = {"theme": user.preferences.theme, "font": user.preferences.font}
+        prefs = {
+            "theme": user.preferences.theme,
+            "font": user.preferences.font,
+            "tour_completed": bool(user.preferences.tour_completed),
+        }
         
     return {
         "id": user.id,
         "full_name": user.full_name,
         "email": user.email,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
         "preferences": prefs,
         "connections": {
             "github": {
@@ -170,8 +176,12 @@ def get_me(request: Request, db: Session = Depends(get_db)) -> dict[str, Any]:
 @user_router.get("/preferences")
 def get_preferences(user: User = Depends(get_current_user)) -> dict[str, Any]:
     if user.preferences:
-        return {"theme": user.preferences.theme, "font": user.preferences.font}
-    return {"theme": "dark", "font": "Inter"}
+        return {
+            "theme": user.preferences.theme,
+            "font": user.preferences.font,
+            "tour_completed": bool(user.preferences.tour_completed),
+        }
+    return {"theme": "dark", "font": "Inter", "tour_completed": False}
 
 @user_router.post("/preferences")
 def update_preferences(
@@ -183,15 +193,21 @@ def update_preferences(
     if existing:
         if payload.theme: existing.theme = payload.theme
         if payload.font: existing.font = payload.font
+        if payload.tour_completed is not None: existing.tour_completed = payload.tour_completed
     else:
         existing = UserPreferences(
             user_id=user.id,
             theme=payload.theme or "dark",
-            font=payload.font or "Inter"
+            font=payload.font or "Inter",
+            tour_completed=payload.tour_completed or False,
         )
         db.add(existing)
     
     db.commit()
     db.refresh(existing)
-    return {"theme": existing.theme, "font": existing.font}
+    return {
+        "theme": existing.theme,
+        "font": existing.font,
+        "tour_completed": bool(existing.tour_completed),
+    }
 

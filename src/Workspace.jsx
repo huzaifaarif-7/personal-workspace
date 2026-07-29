@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Joyride } from "react-joyride";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import OnboardingTour from "./components/OnboardingTour.jsx";
+import { createTourSteps } from "./components/tourSteps.js";
 import {
   LayoutDashboard, Calendar, MessageSquare, Github, Mail, Settings,
   Search, Plus, Copy, Check, ExternalLink, Send, Sparkles, Clock,
@@ -523,6 +524,8 @@ function AuthView({ onAuthSuccess }) {
       return;
     }
     
+    const isSignup = mode === "signup";
+
     try {
       const res = await fetch(`${API_BASE}/auth/${mode}`, {
         method: "POST",
@@ -538,7 +541,7 @@ function AuthView({ onAuthSuccess }) {
         throw new Error("An error occurred. Please try again.");
       }
       
-      onAuthSuccess(payload);
+      onAuthSuccess(payload, isSignup);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -802,65 +805,50 @@ export default function App() {
   const [data, setData] = useState(() => buildData());
   const [mode, setMode] = useState("demo");      // "demo" | "live" | "loading"
   const [view, setView] = useState("dashboard");
-  const [onboard, setOnboard] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
   const [assistOpen, setAssistOpen] = useState(false);
   const [newEvent, setNewEvent] = useState(false);
   const [events, setEvents] = useState(data.calendar);
 
   // --- Tour State ---
-  const [runTour, setRunTour] = useState(false);
-  const [tourStepIndex, setTourStepIndex] = useState(0);
+  const [showTour, setShowTour] = useState(false);
 
+  // Update page title and show tour for new users. Fires whenever `user` changes.
   useEffect(() => {
-    if (user && !localStorage.getItem("hasSeenTour")) {
-      const t = setTimeout(() => { setRunTour(true); }, 1200);
+    if (!user) { document.title = "Workspace"; return; }
+    document.title = `${user.full_name}'s Workspace`;
+    if (localStorage.getItem("workspace-tour-done")) return;
+    // Check server-side flag: if prefs say tour_completed, don't show
+    if (user.preferences?.tour_completed) return;
+    const createdAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+    const isNew = createdAt > 0 && (Date.now() - createdAt < 60000);
+    if (isNew) {
+      // Small delay so the dashboard has time to render before the tour starts
+      const t = setTimeout(() => setShowTour(true), 800);
       return () => clearTimeout(t);
     }
   }, [user]);
 
-  const handleJoyrideCallback = (data) => {
-    const { action, index, status, type } = data;
-    if (status === 'finished' || status === 'skipped') {
-      setRunTour(false);
-      localStorage.setItem("hasSeenTour", "true");
-    } else if (type === 'step:after' || type === 'target:not-found') {
-      const nextIndex = index + (action === 'prev' ? -1 : 1);
-      if (nextIndex === 0) {
-        setView('dashboard');
-      } else if (nextIndex === 1) {
-        setView('settings');
-        setNavOpen(false);
-      } else if (nextIndex === 2) {
-        setView('dashboard');
-      }
-      setTourStepIndex(nextIndex);
+  const handleTourComplete = useCallback(() => {
+    setShowTour(false);
+    localStorage.setItem("workspace-tour-done", "true");
+    // Persist server-side so the tour doesn't repeat across browsers
+    if (API_BASE) {
+      fetch(`${API_BASE}/preferences`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ tour_completed: true }),
+      }).catch(() => {});
     }
-  };
+  }, []);
 
-  const tourSteps = [
-    {
-      target: '.tour-integrations',
-      content: 'Connect your favorite tools like GitHub, Gmail, and Slack to bring everything into one workspace.',
-      disableBeacon: true,
-      placement: 'bottom',
-    },
-    {
-      target: '.tour-appearance',
-      content: 'Customize your workspace. Choose from a variety of sleek dark themes and typography.',
-      placement: 'bottom',
-    },
-    {
-      target: '.tour-assistant',
-      content: 'Have a question? Meet your new AI assistant. Click here to chat and get help navigating your work.',
-      placement: 'top-end',
-    },
-    {
-      target: '.tour-notifications',
-      content: 'Never miss an update. Your unread messages and alerts will be neatly tallied up here.',
-      placement: 'bottom-end',
-    }
-  ];
+  // tourSteps is memoised so beforeStep closures always hold fresh state refs
+  const tourSteps = useCallback(
+    () => createTourSteps({ setView, setAssistOpen }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
   // ------------------
 
   const checkAuth = async () => {
@@ -904,23 +892,7 @@ export default function App() {
     checkAuth();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      document.title = `${user.full_name}'s Workspace`;
-      const done = localStorage.getItem(`onboarding_done_${user.id}`);
-      setOnboard(!done);
-    } else {
-      document.title = "Workspace";
-      setOnboard(false);
-    }
-  }, [user]);
-
-  const finishOnboarding = () => {
-    if (user?.id) localStorage.setItem(`onboarding_done_${user.id}`, "1");
-    setOnboard(false);
-  };
-
-  // Auth → Dashboard (with onboarding overlay for first-time users)
+  // Auth → Dashboard
   if (authLoading) {
     return (
       <>
@@ -935,7 +907,7 @@ export default function App() {
       return (
         <>
           <style>{CSS}</style>
-          <AuthView onAuthSuccess={(payload) => {
+          <AuthView onAuthSuccess={(payload, isSignup) => {
             if (payload && payload.authenticated) {
               if (payload.preferences) {
                 applyPreferences(payload.preferences);
@@ -945,6 +917,12 @@ export default function App() {
               setUser(payload);
               window.history.pushState({}, '', '/');
               fetchDashboardData();
+              // Only new sign-ups get the tour automatically
+              if (isSignup && !payload.preferences?.tour_completed) {
+                const t = setTimeout(() => setShowTour(true), 900);
+                // cleanup handled by component unmount
+                void t;
+              }
             } else {
               checkAuth();
             }
@@ -1003,28 +981,12 @@ export default function App() {
     <div className={`hw ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <style>{CSS}</style>
 
-      <Joyride
-        steps={tourSteps}
-        run={runTour}
-        continuous={true}
-        showSkipButton={true}
-        showProgress={true}
-        stepIndex={tourStepIndex}
-        callback={handleJoyrideCallback}
-        styles={{
-          options: {
-            primaryColor: 'var(--primary)',
-            backgroundColor: 'var(--surface)',
-            textColor: 'var(--text)',
-            arrowColor: 'var(--surface)',
-            overlayColor: 'rgba(0, 0, 0, 0.65)'
-          },
-          tooltipContainer: { textAlign: 'left' },
-          buttonNext: { borderRadius: 6, padding: '8px 16px', fontWeight: 600 },
-          buttonBack: { color: 'var(--text-muted)' },
-          buttonSkip: { color: 'var(--text-muted)' }
-        }}
-      />
+      {showTour && (
+        <OnboardingTour
+          steps={tourSteps()}
+          onComplete={handleTourComplete}
+        />
+      )}
 
       {/* ============ SIDEBAR ============ */}
       {navOpen && <div className="scrim" onClick={() => setNavOpen(false)} />}
@@ -1035,7 +997,12 @@ export default function App() {
         </div>
         <div className="nav-label">Menu</div>
         {nav.map((n) => (
-          <div key={n.id} className={`nav ${view === n.id ? "active" : ""}`} onClick={() => go(n.id)}>
+          <div
+            key={n.id}
+            className={`nav ${view === n.id ? "active" : ""}`}
+            onClick={() => go(n.id)}
+            data-tour-nav={n.id}
+          >
             <n.icon size={17} />
             <span>{n.label}</span>
             {n.badge ? <span className="badge">{n.badge}</span> : null}
@@ -1069,35 +1036,9 @@ export default function App() {
         <header className="topbar">
           <button className="icon-btn" onClick={() => window.innerWidth <= 860 ? setNavOpen(true) : setSidebarCollapsed(c => !c)} title="Toggle sidebar"><Menu size={18} /></button>
 
-          <ThemePicker current={theme} onChange={handleThemeChange} />
-          { <div className="greet">
+          <div className="greet">
             <div className="greet"><span className="greet-text">{greeting},</span> <span className="greet-name">{user.full_name.split(' ')[0]}</span></div>
-          </div> }
-          <button className="icon-btn tour-notifications" style={{ position: "relative" }}>
-            <Bell size={17} />
-            {(unreadSlack + unreadEmail) > 0 && (
-              <span style={{
-                position: "absolute",
-                top: 0,
-                right: 0,
-                background: "var(--danger)",
-                color: "#fff",
-                fontSize: 9,
-                fontWeight: 700,
-                minWidth: 16,
-                height: 16,
-                borderRadius: 8,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "0 3px",
-                border: "2px solid var(--surface)",
-                transform: "translate(30%, -30%)"
-              }}>
-                {(unreadSlack + unreadEmail) > 99 ? "99+" : (unreadSlack + unreadEmail)}
-              </span>
-            )}
-          </button>
+          </div>
         </header>
 
         <div className="scroll">
@@ -1114,7 +1055,13 @@ export default function App() {
           {view === "email" && <EmailView email={data.email} connections={connections} setConnections={setConnections} />}
           {view === "settings" && (
             <SettingsErrorBoundary>
-              <SettingsView user={user} setUser={setUser} theme={theme} onThemeChange={handleThemeChange} integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections} />
+              <SettingsView user={user} setUser={setUser} theme={theme} onThemeChange={handleThemeChange} integrations={data.integrations} mode={mode} onConnect={liveConnect} connections={connections} setConnections={setConnections}
+                onReplayTour={() => {
+                  localStorage.removeItem("workspace-tour-done");
+                  setView("dashboard");
+                  setTimeout(() => setShowTour(true), 300);
+                }}
+              />
             </SettingsErrorBoundary>
           )}
         </div>
@@ -1156,16 +1103,6 @@ export default function App() {
         </div>
       )}
 
-      {/* ============ ONBOARDING ============ */}
-      {onboard && (
-        <Onboarding
-          user={user}
-          integrations={data.integrations}
-          mode={mode}
-          onConnect={liveConnect}
-          onDone={finishOnboarding}
-        />
-      )}
       {newEvent && <NewEventModal onClose={() => setNewEvent(false)} onAdd={addEvent} />}
     </div>
   );
@@ -1828,7 +1765,7 @@ class SettingsErrorBoundary extends React.Component {
 }
 
 /* ---------------------------- Settings ---------------------------- */
-function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode, onConnect, connections, setConnections }) {
+function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode, onConnect, connections, setConnections, onReplayTour }) {
   const [activeFont, setActiveFont] = useState(
     () => localStorage.getItem("workspace-font") || "Inter"
   );
@@ -1989,6 +1926,22 @@ function SettingsView({ user, setUser, theme, onThemeChange, integrations, mode,
             </div>
           );
         })}
+      </div>
+
+      {/* Help / Tour section */}
+      <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: ".08em", margin: "24px 0 14px" }}>Help</div>
+      <div className="card" style={{ padding: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: "var(--text)", marginBottom: 4 }}>Guided walkthrough</div>
+          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>Replay the onboarding tour to rediscover features</div>
+        </div>
+        <button
+          className="btn"
+          onClick={onReplayTour}
+          style={{ flexShrink: 0, whiteSpace: "nowrap" }}
+        >
+          Replay walkthrough
+        </button>
       </div>
     </div>
   );
@@ -2207,87 +2160,6 @@ function AssistantPanel({ onClose, data, events, addEvent, mode, unreadSlack, un
   );
 }
 
-/* ---------------------------- Onboarding ---------------------------- */
-function Onboarding({ user, integrations, mode, onConnect, onDone }) {
-  const [step, setStep] = useState(0);
-  const [conn, setConn] = useState(Object.fromEntries(integrations.map((i) => [i.id, false])));
-  const connectedCount = Object.values(conn).filter(Boolean).length;
-
-  const steps = ["Welcome", "Connect apps", "Permissions", "All set"];
-  const next = () => setStep((s) => Math.min(s + 1, 3));
-
-  return (
-    <div className="overlay">
-      <div className="sheet">
-        <div className="sheet-h">
-          <div className="steps" style={{ marginBottom: 18 }}>{steps.map((_, i) => <i key={i} className={i <= step ? "on" : ""} />)}</div>
-          {step === 0 && <>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Mascot size={52} />
-              <div>
-                <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>Welcome, {user.full_name.split(' ')[0]}</h2>
-                <p style={{ color: "var(--text-secondary)", fontSize: 13.5, marginTop: 4 }}>Let's set up your command center.</p>
-              </div>
-            </div>
-          </>}
-          {step === 1 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Connect your tools</h2>}
-          {step === 2 && <h2 className="hw-display" style={{ fontSize: 21, fontWeight: 700 }}>Grant permissions</h2>}
-          {step === 3 && <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <WorkspaceLogo size={32} />
-            <h2 className="hw-display" style={{ fontSize: 22, fontWeight: 700 }}>You're all set!</h2>
-          </div>}
-        </div>
-
-        <div className="sheet-b">
-          {step === 0 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
-            Stop tab-hopping between Slack, Calendar, GitHub and email. Connect them once and get a single, intelligent overview — plus an AI assistant that summarizes your whole day in seconds.
-          </p>}
-
-          {step === 1 && <div style={{ display: "grid", gap: 10 }}>
-            {integrations.map((it) => {
-              const Ic = intIcon[it.id] || Settings; const on = conn[it.id] || (mode === "live" && it.connected);
-              const isOauth = ["gh", "gcal", "email", "slack"].includes(it.id);
-              return (
-                <div className="conn-card" key={it.id} style={{ padding: 13 }}>
-                  <div className="conn-ic" style={{ width: 38, height: 38, background: `color-mix(in srgb, ${it.color} 16%, transparent)`, border: `1px solid color-mix(in srgb, ${it.color} 30%, transparent)` }}><Ic size={18} color={it.color} /></div>
-                  <div style={{ flex: 1, minWidth: 0 }}><div style={{ fontWeight: 600, fontSize: 13.5 }}>{it.name}</div><div style={{ fontSize: 11.5, color: "var(--text-secondary)" }}>{it.desc}</div></div>
-                  <button className={on ? "btn connected" : "btn primary"} style={{ padding: "7px 13px", fontSize: 12.5 }}
-                    onClick={() => { if (mode === "live" && isOauth) { onConnect(it.id); return; } setConn((p) => ({ ...p, [it.id]: !on })); }}>
-                    {on ? <><Check size={13} /> Connected</> : "Connect"}
-                  </button>
-                </div>
-              );
-            })}
-          </div>}
-
-          {step === 2 && <div style={{ display: "grid", gap: 10 }}>
-            {["Read your messages & mentions", "View calendar & create events", "Read repository activity", "Read your inbox & flag important mail"].map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "11px 13px", background: "var(--inset)", border: "1px solid var(--border)", borderRadius: 11, fontSize: 13 }}>
-                <CircleCheck size={17} color="var(--success)" /> {p}
-              </div>
-            ))}
-            <p style={{ fontSize: 11.5, color: "var(--text-muted)", marginTop: 2 }}>You can revoke access anytime from Settings. We never post on your behalf.</p>
-          </div>}
-
-          {step === 3 && <p style={{ color: "var(--text-secondary)", fontSize: 14, lineHeight: 1.6 }}>
-            {connectedCount > 0 ? `${connectedCount} ${connectedCount === 1 ? "tool" : "tools"} connected. ` : ""}
-            Your dashboard is ready. Your assistant is standing by on the right — try asking <b style={{ color: "var(--text)" }}>"What's happening today?"</b>
-          </p>}
-        </div>
-
-        <div className="sheet-f">
-          {step > 0 && step < 3 && <button className="btn ghost" onClick={() => setStep((s) => s - 1)}>Back</button>}
-          {step === 0 && <button className="btn ghost" onClick={onDone}>Skip</button>}
-          <div style={{ marginLeft: "auto", display: "flex", gap: 10 }}>
-            {step < 3
-              ? <button className="btn primary" onClick={next}>{step === 0 ? "Get started" : "Continue"} <ChevronRight size={15} /></button>
-              : <button className="btn primary" onClick={onDone}>Enter workspace <ArrowUpRight size={15} /></button>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------------------- New event modal ---------------------------- */
 function NewEventModal({ onClose, onAdd }) {

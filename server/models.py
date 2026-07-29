@@ -13,7 +13,7 @@ Schema is intentionally multi-user-ready:
 from datetime import datetime, timezone
 
 from sqlalchemy import (
-    Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint,
+    Boolean, Column, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -70,7 +70,7 @@ class User(Base):
 # ---------------------------------------------------------------------------
 
 class UserPreferences(Base):
-    """Per-user UI preferences (theme, font) persisted across sessions."""
+    """Per-user UI preferences (theme, font, tour state) persisted across sessions."""
     __tablename__ = "user_preferences"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -82,6 +82,7 @@ class UserPreferences(Base):
     )
     theme = Column(String, nullable=False, default="dark")
     font = Column(String, nullable=False, default="Inter")
+    tour_completed = Column(Boolean, nullable=False, default=False)
     updated_at = Column(
         DateTime(timezone=True),
         default=func.now(),
@@ -91,7 +92,7 @@ class UserPreferences(Base):
     user = relationship("User", back_populates="preferences")
 
     def __repr__(self) -> str:
-        return f"<UserPreferences user_id={self.user_id} theme={self.theme!r} font={self.font!r}>"
+        return f"<UserPreferences user_id={self.user_id} theme={self.theme!r} font={self.font!r} tour_completed={self.tour_completed!r}>"
 
 
 # ---------------------------------------------------------------------------
